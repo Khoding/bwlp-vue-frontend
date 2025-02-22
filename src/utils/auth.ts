@@ -1,10 +1,4 @@
-import { encode } from "punycode"
-
-type AuthLogin = {
-    Login: string,
-    Password: string,
-    Token: string
-}
+"use-strict"
 
 type AuthProps = {
     AuthServerBaseURL: string,
@@ -16,7 +10,6 @@ type AuthProps = {
 export class Auth {
     private authServerBaseURL: string
     private authPath: string
-    private token: string
     private redirectURL?: string
     private entityID: string
 
@@ -28,7 +21,6 @@ export class Auth {
 
     public setAuth(props: AuthProps) {
         this.authServerBaseURL = props.AuthServerBaseURL
-        this.token = props.Token
     }
 
     public generateLoginURL(): string {
@@ -46,11 +38,8 @@ export class Auth {
         const redirectEncoded = encodeURIComponent(this.redirectURL)
 
         const url =  authPath + `?entityID=${entityIDEncoded}&return=${redirectEncoded}`
-        console.log("URL:::    ", url)
         return url
     }
-    public setUserLogin() {}
-    public setUserPw(pw:string) {}
     public setEntityId(entityID: string) {
         this.entityID = entityID
     }
