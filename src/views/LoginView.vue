@@ -2,21 +2,7 @@
   <div class="login-view">
     <h2>Login</h2>
 
-    <form @submit.prevent="login">
-      <div class="field label round border">
-        <input type="text" id="username" v-model="username" required />
-        <label>Username</label>
-      </div>
-
-      <div class="field label round border">
-        <input type="password" id="password" v-model="password" required />
-        <label>Password</label>
-      </div>
-
-      <button type="submit">Login</button>
-
-      <p v-if="error" class="error-message">{{ error }}</p>
-    </form>
+    <button v-on:click="login()"></button>
   </div>
 </template>
 
@@ -25,36 +11,29 @@ import {ref} from '@vue/runtime-core';
 import {useRouter} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
 
+import { Auth } from '@/utils/auth';
+
 import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
 import {Thrift} from '@/assets/js/thrift/thrift.js';
 
-const router = useRouter();
-const authStore = useAuthStore();
+// https://bwlp-masterserver.ruf.uni-freiburg.de/shibboleth-ds/?entityID=https%3A%2F%2Fbwlp-masterserver.ruf.uni-freiburg.de%2Fshibboleth&return=https%3A%2F%2Fbwlp-masterserver.ruf.uni-freiburg.de%2FShibboleth.sso%2FLogin%3FSAMLDS%3D1%26target%3Dss%253Amem%253A8040d1693065d7c5d28eed825d981f342d391d146e1dad4e834a7391c88a28bc
 
-const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
+const authServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
+const authPath = "/shibboleth-ds"
+const returnParameter = "http://localhost:51737"
 
-const proto = new Thrift.Protocol(
-  new Thrift.Transport(`https://${mainServer}/thrift/`),
-);
-const main = new MasterServerClient(proto);
+const authHandler = new Auth({
+  AuthServerBaseURL: authServer,
+  AuthPath: authPath,
+}) 
 
-const username = ref('');
-const password = ref('');
-const error = ref('');
+authHandler.setEntityId('https://bwlp-masterserver.ruf.uni-freiburg.de/shibboleth')
+authHandler.setRedirectUrl(returnParameter)
+const authUrl = authHandler.generateLoginURL()
+
 
 const login = async () => {
-  try {
-    const response = await main.localAccountLogin(
-      username.value,
-      password.value,
-    );
-
-    authStore.setToken(response.authToken);
-
-    router.push('/list');
-  } catch (e) {
-    error.value = e.message;
-  }
+  console.log(authUrl)
 };
 </script>
 
