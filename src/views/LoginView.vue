@@ -25,10 +25,10 @@ const returnParameter = "http://localhost:51737"
 const authHandler = new Auth({
   AuthServerBaseURL: authServer,
   AuthPath: authPath,
+  RedirectURL: returnParameter,
 }) 
 
 authHandler.setEntityId('https://bwlp-masterserver.ruf.uni-freiburg.de/shibboleth')
-authHandler.setRedirectUrl(returnParameter)
 const authUrl = authHandler.generateLoginURL()
 
 

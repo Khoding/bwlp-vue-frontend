@@ -27,7 +27,6 @@ export class Auth {
     }
 
     public generateLoginURL(): string {
-
         if (!this.redirectURL || this.redirectURL === "") {
             throw new Error("No redirect given")
         }
@@ -60,4 +59,11 @@ export class Auth {
         this.redirectURL = redirectURL
     }
 
+    public setAuthBaseURL(authBaseURl: string) {
+        this.authServerBaseURL = authBaseURl
+    }
+
+    public setAuthPath(authPath: string) {
+        this.authPath = authPath
+    }
 }
