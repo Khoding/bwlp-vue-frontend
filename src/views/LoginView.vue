@@ -21,34 +21,26 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from '@vue/runtime-core';
+import {ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
 
-import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
-import {Thrift} from '@/assets/js/thrift/thrift.js';
-
 const router = useRouter();
 const authStore = useAuthStore();
-
-const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
-
-const proto = new Thrift.Protocol(new Thrift.Transport(`https://${mainServer}/thrift/`));
-const main = new MasterServerClient(proto);
 
 const username = ref('');
 const password = ref('');
 const error = ref('');
 
-const login = async () => {
-  try {
-    const response = await main.localAccountLogin(username.value, password.value);
+const login = () => {
+  error.value = '';
 
-    authStore.setToken(response.authToken);
-
+  if (username.value === 'test@test.de' && password.value === '123456') {
+    const fakeToken = `fake-token-${Date.now()}`;
+    authStore.setToken(fakeToken);
     router.push('/image');
-  } catch (e) {
-    error.value = e.message;
+  } else {
+    error.value = 'Invalid username or password.';
   }
 };
 </script>
@@ -64,6 +56,11 @@ const login = async () => {
   button {
     display: flex;
     margin-inline: auto;
+  }
+
+  .error-message {
+    margin-block-start: 1em;
+    color: red;
   }
 }
 </style>

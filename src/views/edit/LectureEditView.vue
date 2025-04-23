@@ -4,13 +4,17 @@
 
     <ItemDataPre v-if="devMode" :item-data="itemData" />
 
-    <h1>Edit {{ itemData.lectureName }}</h1>
+    <!-- Display name only after data is loaded -->
+    <h1 v-if="itemData.lectureId">Edit {{ itemData.lectureName }}</h1>
+    <h1 v-else>Loading Lecture...</h1>
 
-    <form @submit.prevent="saveItem">
+    <!-- Only show form once data is loaded -->
+    <form v-if="itemData.lectureId" @submit.prevent="saveItem">
       <ProgressIndicator v-model:currentStep="currentStep" :steps="steps" />
 
       <article class="large scroll">
         <Transition name="page-slide-fast" mode="out-in">
+          <!-- Ensure these step components use v-model correctly -->
           <Step1BasicInfo v-if="currentStep === 1" v-model="itemData" />
           <Step2Permissions v-else-if="currentStep === 2" v-model="itemData" />
           <Step3Network v-else-if="currentStep === 3" v-model="itemData" />
@@ -25,13 +29,16 @@
         :total-steps="steps.length"
       />
     </form>
+    <p v-else-if="!error">Loading lecture data...</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from '@vue/runtime-core';
+import {ref, onMounted} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
+
+import lectureListData from '@/assets/js/bwlp/lectureList.json';
 
 import ErrorMessage from '@/components/error/ErrorMessage.vue';
 import ItemDataPre from '@/components/ItemDataPre.vue';
@@ -50,23 +57,36 @@ const authStore = useAuthStore();
 
 const devMode = ref(import.meta.env.VITE_DEVELOPMENT_MODE === 'true');
 
-import {useSatServer} from '@/composables/useSatServer';
-const sat = useSatServer();
-
 const steps = ref(['Basic Info', 'Permissions', 'Network', 'Advanced']);
 
 const itemData = ref({
+  lectureId: '',
   lectureName: '',
   description: '',
-  startTime: null,
-  endTime: null,
+  imageVersionId: '',
+  imageBaseId: '',
   isEnabled: false,
+  startTime: 0,
+  endTime: 0,
+  lastUsed: 0,
+  useCount: 0,
+  ownerId: '',
+  updaterId: '',
   isExam: false,
   hasInternetAccess: false,
   hasUsbAccess: false,
   autoUpdate: false,
   limitToLocations: false,
+  defaultPermissions: {
+    edit: false,
+    admin: false,
+  },
+  userPermissions: {
+    edit: false,
+    admin: false,
+  },
 });
+
 const error = ref(null);
 const currentStep = ref(1);
 
@@ -78,22 +98,45 @@ const prevStep = () => {
   if (currentStep.value > 1) currentStep.value--;
 };
 
-onMounted(async () => {
-  try {
-    itemData.value = await sat.getLectureDetails(authStore.authToken, route.params.id);
-  } catch (err) {
-    console.error('Failed to fetch lecture details:', err);
-    error.value = err;
+const loadLectureData = (lectureId: string) => {
+  const foundLecture = lectureListData.find(lec => lec.lectureId === lectureId);
+  if (foundLecture) {
+    itemData.value = structuredClone(foundLecture);
+    error.value = null;
+  } else {
+    console.error(`Lecture with ID ${lectureId} not found in local data.`);
+    error.value = `Lecture with ID ${lectureId} not found.`;
+    itemData.value.lectureId = '';
+  }
+};
+
+onMounted(() => {
+  const lectureId = route.params.id as string;
+  if (lectureId) {
+    loadLectureData(lectureId);
+  } else {
+    error.value = 'No lecture ID provided in the route.';
+    console.error('No lecture ID in route params.');
   }
 });
 
 const saveItem = async () => {
+  error.value = null;
   try {
-    await sat.updateLecture(authStore.authToken, itemData.value.lectureId, itemData.value);
-    router.push(`/lecture/${itemData.value.lectureId}`);
+    console.log('--- Simulating Save ---');
+    console.log('Updated Lecture Data:', JSON.parse(JSON.stringify(itemData.value)));
+    console.log('-----------------------');
+    router.replace({name: 'LectureList'});
   } catch (err) {
-    console.error('Failed to update lecture:', err);
-    error.value = err;
+    console.error('Error during simulated save:', err);
+    error.value = 'An unexpected error occurred during save simulation.';
   }
 };
 </script>
+
+<style scoped>
+form {
+  max-inline-size: 860px;
+  margin: 0 auto;
+}
+</style>

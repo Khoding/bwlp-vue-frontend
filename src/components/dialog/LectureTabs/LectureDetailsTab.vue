@@ -15,13 +15,13 @@
         <tr>
           <td>Erstellt am</td>
           <td colspan="3">
-            {{ formatDate(lecture.createTime * 1000, 'DD.MM.YYYY, HH:mm') }}
+            {{ formatDate(1700000000 * 1000, 'DD.MM.YYYY, HH:mm') }}
           </td>
         </tr>
         <tr>
           <td>Geändert am</td>
           <td>
-            {{ formatDate(lecture.updateTime * 1000, 'DD.MM.YYYY, HH:mm') }}
+            {{ formatDate(1700000000 * 1000, 'DD.MM.YYYY, HH:mm') }}
           </td>
           <td><strong>durch</strong></td>
           <td>{{ updaterName }}</td>
@@ -79,9 +79,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, onMounted} from '@vue/runtime-core';
+import {computed} from 'vue';
 import {useDateFormat} from '@vueuse/core';
 import BasicPre from '@/components/BasicPre.vue';
+
+import usersData from '@/assets/js/bwlp/fetchUsers.json';
 
 const props = defineProps({
   lecture: {
@@ -90,43 +92,23 @@ const props = defineProps({
   },
 });
 
-const ownerName = ref('');
-const updaterName = ref('');
-
-import {useUsers} from '@/composables/useUsers';
-
-const {fetchUsers, getUserFullName} = useUsers();
-
 const formatDate = (timestamp: number, format: string) => {
   return useDateFormat(timestamp, format).value;
 };
 
-const refreshUserDetails = () => {
-  getOwnerName();
-  getUpdaterName();
+const getLocalUserFullName = (userId: string): string => {
+  if (!userId || !props.lecture) return 'N/A';
+  const user = usersData.find(u => u.userId === userId);
+  return user && user.firstName && user.lastName
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : userId;
 };
 
-watch(
-  () => props.lecture,
-  newValue => {
-    if (newValue) {
-      refreshUserDetails();
-    }
-  },
-  {immediate: false},
-);
-
-onMounted(() => {
-  refreshUserDetails();
+const ownerName = computed(() => {
+  return getLocalUserFullName(props.lecture?.ownerId);
 });
 
-const getOwnerName = async () => {
-  await fetchUsers();
-  ownerName.value = getUserFullName(props.lecture.ownerId);
-};
-
-const getUpdaterName = async () => {
-  await fetchUsers();
-  updaterName.value = getUserFullName(props.lecture.updaterId);
-};
+const updaterName = computed(() => {
+  return getLocalUserFullName(props.lecture?.updaterId);
+});
 </script>

@@ -11,6 +11,7 @@
     </div>
 
     <div class="field label border">
+      <!-- OS Select now uses local osList -->
       <select v-model="modelValue.osId" disabled>
         <option v-for="os in osList" :key="os.osId" :value="os.osId">
           {{ os.osName }}
@@ -38,24 +39,18 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue';
+import {ref} from 'vue';
 
 import SwitchTitle from '@/components/edit-create/SwitchTitle.vue';
+
+import osListData from '@/assets/js/bwlp/osList.json';
 
 const modelValue = defineModel({
   type: Object,
   required: true,
 });
 
-import {useOperatingSystems} from '@/composables/useOperatingSystems';
-
-const {fetchOperatingSystems} = useOperatingSystems();
-
-const osList = ref([]);
-
-onMounted(async () => {
-  osList.value = await fetchOperatingSystems();
-});
+const osList = ref(osListData);
 
 const shareModes = ref([
   {value: 0, label: 'LOCAL'},
@@ -66,10 +61,6 @@ const shareModes = ref([
 
 const updateShareMode = event => {
   const shareMode = parseInt(event.target.value);
-  const updatedData = {
-    ...modelValue,
-    shareMode,
-  };
-  modelValue.value = updatedData;
+  modelValue.value.shareMode = shareMode;
 };
 </script>

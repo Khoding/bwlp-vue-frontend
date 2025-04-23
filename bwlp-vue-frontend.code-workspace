@@ -4,10 +4,6 @@
       "path": ".",
       "name": "The Vue App",
     },
-    {
-      "path": "../bwlp-frontend",
-      "name": "The Angular App That Sucks",
-    },
   ],
   "settings": {
     "explorer.fileNesting.patterns": {

@@ -10,9 +10,7 @@
       <tbody>
         <tr>
           <td class="min">Dateinamenserweiterung</td>
-          <td class="bold">
-            {{ parseString(lecture.runscript).ext || 'No script' }}
-          </td>
+          <td class="bold">bat</td>
         </tr>
         <tr>
           <td class="min">Sichtbarkeit</td>
@@ -29,15 +27,14 @@
       </tbody>
     </table>
 
-    <section v-if="parseString(lecture.runscript).script" class="s12 l6">
+    <section class="s12 l6">
       <nav class="pre-title left-padding">
         <div class="max">Run script</div>
-        <div class="ext bold text-monospace min left-padding right-padding">
-          {{ parseString(lecture.runscript).ext }}
-        </div>
+        <div class="ext bold text-monospace min left-padding right-padding">bat</div>
       </nav>
       <!-- TODO: Maybe use Shiki (https://shiki.style) for this part -->
-      <pre class="code-pre scroll"><code>{{ parseString(lecture.runscript).script }}</code></pre>
+      <pre class="code-pre scroll"><code>start firefox.exe "https://bwlp.khodok.com"
+exit</code></pre>
     </section>
   </section>
 </template>

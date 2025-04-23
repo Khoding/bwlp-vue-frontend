@@ -38,7 +38,7 @@
             :key="getItemKey(item)"
             :id="getItemKey(item)"
             class="ripple pointer"
-            @click="$emit('row-click', item)"
+            @click.stop="$emit('row-click', item)"
           >
             <td v-for="column in columns" :key="column.field" :class="column.class">
               <template v-if="column.formatter">
@@ -49,11 +49,13 @@
               <template v-else-if="column.field === 'ownerId'">
                 <!-- TODO: make the text bold if the ownerId matches the currently logged in user's id -->
                 <!-- also do it for everywhere else that has ownerId, or updaterId, etc. -->
-                {{ getUserFullName(item[column.field]) }}
+                <!-- Use local lookup function -->
+                {{ getLocalUserFullName(item[column.field]) }}
               </template>
 
               <template v-else-if="column.field === 'osId'">
-                {{ getOSName(item[column.field]) }}
+                <!-- Use local lookup function -->
+                {{ getLocalOSName(item[column.field]) }}
               </template>
 
               <template v-else-if="column.field === 'virtId'">
@@ -62,7 +64,8 @@
 
               <template v-else-if="column.field === 'isEnabled'">
                 <label class="checkbox center">
-                  <input type="checkbox" :checked="column.field" disabled />
+                  <!-- Correctly bind the checked state to the item's property -->
+                  <input type="checkbox" :checked="item[column.field]" disabled />
                   <span></span>
                 </label>
               </template>
@@ -77,7 +80,6 @@
         <tfoot class="fixed">
           <tr>
             <th :colspan="createRoute !== '' ? footerColspan : columns.length">
-              <!-- We give this a colspan of 42 so that it always fully colspans: https://stackoverflow.com/questions/398734/colspan-all-columns#comment19907221_398778 this guy says "why tf not", and I find it funny because 42 so here we are -->
               Showing {{ filteredItems.length }} of {{ items.length }}
               {{ itemLabel }}
             </th>
@@ -112,18 +114,23 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, watch} from '@vue/runtime-core';
-import {useUsers} from '@/composables/useUsers';
-import {useOperatingSystems} from '@/composables/useOperatingSystems';
+import {ref, computed, onMounted, watch} from 'vue';
 import VirtLogo from '@/components/VirtLogo.vue';
 
-const {fetchUsers, getUserFullName} = useUsers();
-const {fetchOperatingSystems, getOSName} = useOperatingSystems();
+import usersData from '@/assets/js/bwlp/fetchUsers.json';
+import osListData from '@/assets/js/bwlp/osList.json';
 
-onMounted(async () => {
-  await fetchUsers();
-  await fetchOperatingSystems();
-});
+const getLocalUserFullName = (userId: string): string => {
+  if (!userId) return 'N/A';
+  const user = usersData.find(u => u.userId === userId);
+  return user ? `${user.firstName} ${user.lastName}`.trim() : userId;
+};
+
+const getLocalOSName = (osId: number): string => {
+  if (osId === null || osId === undefined) return 'N/A';
+  const os = osListData.find(o => o.osId === osId);
+  return os ? os.osName : `Unknown OS (${osId})`;
+};
 
 interface Column {
   field: string;
@@ -203,21 +210,21 @@ const filterItems = () => {
   filteredItems.value = props.items.filter(item => {
     return props.columns.some(column => {
       const value = item[column.field];
-      if (!value) return false;
+      if (value === null || value === undefined) return false;
 
       if (column.field === 'ownerId') {
-        return getUserFullName(value).toLowerCase().includes(query);
+        return getLocalUserFullName(value).toLowerCase().includes(query);
       }
       if (column.field === 'osId') {
-        return getOSName(value).toLowerCase().includes(query);
+        return getLocalOSName(value).toLowerCase().includes(query);
       }
       if (column.formatter) {
-        return column.formatter(value, item).toLowerCase().includes(query);
+        const formattedValue = column.formatter(value, item);
+        return formattedValue ? formattedValue.toLowerCase().includes(query) : false;
       }
       if (column.field === 'virtId') {
         return String(value).toLowerCase().includes(query);
       }
-
       return String(value).toLowerCase().includes(query);
     });
   });
@@ -231,13 +238,23 @@ const filteredAndSortedItems = computed(() => {
   return [...filteredItems.value].sort((a, b) => {
     let compareValue = 0;
     const field = sortField.value;
+    let aValue = a[field];
+    let bValue = b[field];
 
-    if (typeof a[field] === 'number') {
-      compareValue = a[field] - b[field];
+    if (field === 'ownerId') {
+      aValue = getLocalUserFullName(aValue);
+      bValue = getLocalUserFullName(bValue);
+    } else if (field === 'osId') {
+      aValue = getLocalOSName(aValue);
+      bValue = getLocalOSName(bValue);
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      compareValue = aValue - bValue;
     } else {
-      const aValue = String(a[field] || '').toLowerCase();
-      const bValue = String(b[field] || '').toLowerCase();
-      compareValue = aValue.localeCompare(bValue);
+      const aStr = String(aValue || '').toLowerCase();
+      const bStr = String(bValue || '').toLowerCase();
+      compareValue = aStr.localeCompare(bStr);
     }
 
     return sortOrder.value === 'asc' ? compareValue : -compareValue;
@@ -250,10 +267,13 @@ onMounted(() => {
 
 watch(
   () => props.items,
-  () => {
+  newItems => {
     filterItems();
   },
+  {immediate: true},
 );
+
+watch(searchQuery, filterItems);
 </script>
 
 <style scoped>

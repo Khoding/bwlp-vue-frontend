@@ -9,7 +9,6 @@
           <th>Verwendbar</th>
           <th>Größe</th>
           <th>Interne ID</th>
-          <th>OSVDI</th>
         </tr>
       </thead>
       <tbody>
@@ -20,7 +19,7 @@
           <td>
             {{ formatDate(version.expireTime * 1000, 'DD.MM.YYYY, HH:mm') }}
           </td>
-          <td>{{ version.uploaderId }}</td>
+          <td>{{ getLocalUserFullName(version.uploaderId) }}</td>
           <td>
             <label class="checkbox">
               <input
@@ -35,15 +34,6 @@
           </td>
           <td>{{ humanFileSize(version.fileSize) }}</td>
           <td>{{ version.versionId }}</td>
-          <td>
-            <a
-              :href="`${useSatServerOSVDI()}${version.imagePath}`"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Link to OSVDI image
-              <OpenInBlank class="no-space" />
-            </a>
-          </td>
         </tr>
       </tbody>
     </table>
@@ -54,18 +44,27 @@
 import {humanFileSize} from '@/utils/fileSize';
 import {useDateFormat} from '@vueuse/core';
 
-import {useSatServerOSVDI} from '@/composables/useSatServer';
-
 import OpenInBlank from '@/components/OpenInBlank.vue';
+
+import usersData from '@/assets/js/bwlp/fetchUsers.json';
 
 defineProps({
   versions: {
     type: Array,
     required: true,
+    default: () => [],
   },
 });
 
 const formatDate = (timestamp: number, format: string) => {
   return useDateFormat(timestamp, format).value;
+};
+
+const getLocalUserFullName = (userId: string): string => {
+  if (!userId) return 'N/A';
+  const user = usersData.find(u => u.userId === userId);
+  return user && user.firstName && user.lastName
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : userId;
 };
 </script>

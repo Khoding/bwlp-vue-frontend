@@ -35,6 +35,9 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'Login',
     component: LoginView,
+    meta: {
+      title: 'Login',
+    },
     beforeEnter: (_to, _from, next) => {
       const authStore = useAuthStore();
 

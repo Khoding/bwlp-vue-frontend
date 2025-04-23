@@ -4,9 +4,12 @@
 
     <ItemDataPre v-if="devMode" :item-data="itemData" />
 
-    <h1>Edit {{ itemData.imageName }}</h1>
+    <!-- Display name only after data is loaded -->
+    <h1 v-if="itemData.imageBaseId">Edit {{ itemData.imageName }}</h1>
+    <h1 v-else>Loading Image...</h1>
 
-    <form @submit.prevent="saveItem">
+    <!-- Only show form once data is loaded -->
+    <form v-if="itemData.imageBaseId" @submit.prevent="saveItem">
       <ProgressIndicator v-model:currentStep="currentStep" :steps="steps" />
 
       <article class="large scroll">
@@ -23,13 +26,16 @@
         :total-steps="steps.length"
       />
     </form>
+    <p v-else-if="!error">Loading image data...</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from '@vue/runtime-core';
+import {ref, onMounted} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
+
+import imageListData from '@/assets/js/bwlp/imageList.json';
 
 import ErrorMessage from '@/components/error/ErrorMessage.vue';
 import ItemDataPre from '@/components/ItemDataPre.vue';
@@ -45,9 +51,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const devMode = ref(import.meta.env.VITE_DEVELOPMENT_MODE === 'true');
-
-import {useSatServer} from '@/composables/useSatServer';
-const sat = useSatServer();
 
 const steps = ref(['Basic Info', 'Permissions']);
 
@@ -67,16 +70,16 @@ const itemData = ref({
   shareMode: 0,
   isTemplate: false,
   defaultPermissions: {
-    link: true,
-    download: true,
+    link: false,
+    download: false,
     edit: false,
     admin: false,
   },
   userPermissions: {
-    link: true,
-    download: true,
-    edit: true,
-    admin: true,
+    link: false,
+    download: false,
+    edit: false,
+    admin: false,
   },
 });
 
@@ -91,22 +94,38 @@ const prevStep = () => {
   if (currentStep.value > 1) currentStep.value--;
 };
 
-onMounted(async () => {
-  try {
-    itemData.value = await sat.getImageDetails(authStore.authToken, route.params.id);
-  } catch (err) {
-    console.error('Failed to fetch image details:', err);
-    error.value = err;
+const loadImageData = (imageId: string) => {
+  const foundImage = imageListData.find(img => img.imageBaseId === imageId);
+  if (foundImage) {
+    itemData.value = structuredClone(foundImage);
+    error.value = null;
+  } else {
+    console.error(`Image with ID ${imageId} not found in local data.`);
+    error.value = `Image with ID ${imageId} not found.`;
+    itemData.value.imageBaseId = '';
+  }
+};
+
+onMounted(() => {
+  const imageId = route.params.id as string;
+  if (imageId) {
+    loadImageData(imageId);
+  } else {
+    error.value = 'No image ID provided in the route.';
+    console.error('No image ID in route params.');
   }
 });
 
 const saveItem = async () => {
+  error.value = null;
   try {
-    await sat.updateImageBase(authStore.authToken, itemData.value.imageBaseId, itemData.value);
-    router.push(`/image/${itemData.value.imageBaseId}`);
+    console.log('--- Simulating Save ---');
+    console.log('Updated Image Data:', JSON.parse(JSON.stringify(itemData.value)));
+    console.log('-----------------------');
+    router.replace({name: 'ImageList'});
   } catch (err) {
-    console.error('Failed to update image:', err);
-    error.value = err;
+    console.error('Error during simulated save:', err);
+    error.value = 'An unexpected error occurred during save simulation.';
   }
 };
 </script>

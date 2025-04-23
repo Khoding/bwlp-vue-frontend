@@ -32,7 +32,7 @@
         </tr>
         <tr>
           <td>Betriebssystem</td>
-          <td colspan="3">{{ image.versions[0].versionId }}</td>
+          <td colspan="3">{{ osName }}</td>
         </tr>
         <tr>
           <td>Freigabemodus</td>
@@ -41,9 +41,9 @@
             <label class="checkbox">
               <input
                 type="checkbox"
-                :checked="image.isShared"
-                :id="`image_is_shared-${image.imageBaseId}`"
-                :name="`image_is_shared-${image.imageBaseId}`"
+                :checked="image.isTemplate"
+                :id="`image_is_template-${image.imageBaseId}`"
+                :name="`image_is_template-${image.imageBaseId}`"
                 disabled
               />
               <span>Vorlage</span>
@@ -52,16 +52,8 @@
         </tr>
         <tr>
           <td>Latest version ID</td>
-          <td colspan="2">{{ image.latestVersionId || 'Expired' }}</td>
-          <td>
-            <a
-              :href="`${useSatServerOSVDI()}${image.versions[image.versions.length - 1].imagePath}`"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Link to OSVDI image
-              <OpenInBlank />
-            </a>
-          </td>
+          <td colspan="2">{{ image.latestVersionId || 'N/A' }}</td>
+          <td>OSVDI Link Removed</td>
         </tr>
         <tr>
           <td>VM-ID</td>
@@ -71,7 +63,6 @@
           <td>Virtualisierer</td>
           <td colspan="3">
             {{ image.virtId }}
-
             <VirtLogo :virt="image.virtId" :display-tooltip="false" />
           </td>
         </tr>
@@ -81,11 +72,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, onMounted} from '@vue/runtime-core';
+import {computed} from 'vue';
 import {useDateFormat} from '@vueuse/core';
 
 import VirtLogo from '@/components/VirtLogo.vue';
-import OpenInBlank from '@/components/OpenInBlank.vue';
+
+import usersData from '@/assets/js/bwlp/fetchUsers.json';
+import osListData from '@/assets/js/bwlp/osList.json';
 
 const props = defineProps({
   image: {
@@ -94,44 +87,32 @@ const props = defineProps({
   },
 });
 
-const ownerName = ref('');
-const updaterName = ref('');
-
-import {useUsers} from '@/composables/useUsers';
-import {useSatServerOSVDI} from '@/composables/useSatServer';
-
-const {fetchUsers, getUserFullName} = useUsers();
-
 const formatDate = (timestamp: number, format: string) => {
   return useDateFormat(timestamp, format).value;
 };
 
-const refreshUserDetails = () => {
-  getOwnerName();
-  getUpdaterName();
+const getLocalUserFullName = (userId: string): string => {
+  if (!userId || !props.image) return 'N/A';
+  const user = usersData.find(u => u.userId === userId);
+  return user && user.firstName && user.lastName
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : userId;
 };
 
-watch(
-  () => props.image,
-  newValue => {
-    if (newValue) {
-      refreshUserDetails();
-    }
-  },
-  {immediate: false},
-);
+const getLocalOSName = (osId: number): string => {
+  const os = osListData.find(o => o.osId === osId);
+  return os ? os.osName : `Unknown OS (${osId})`;
+};
 
-onMounted(() => {
-  refreshUserDetails();
+const ownerName = computed(() => {
+  return getLocalUserFullName(props.image?.ownerId);
 });
 
-const getOwnerName = async () => {
-  await fetchUsers();
-  ownerName.value = getUserFullName(props.image.ownerId);
-};
+const updaterName = computed(() => {
+  return getLocalUserFullName(props.image?.updaterId);
+});
 
-const getUpdaterName = async () => {
-  await fetchUsers();
-  updaterName.value = getUserFullName(props.image.updaterId);
-};
+const osName = computed(() => {
+  return getLocalOSName(props.image?.osId);
+});
 </script>

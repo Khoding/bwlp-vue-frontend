@@ -4,7 +4,7 @@
       <ErrorMessage
         v-if="error"
         :error="error"
-        default-message="There's been an error of some kind"
+        default-message="There's been an error loading lecture data"
       />
 
       <SortableTable
@@ -17,6 +17,8 @@
         :footer-colspan="columns.length - 2"
         create-route="LectureCreate"
       />
+      <p v-else-if="!error && !isLoading">No lectures found.</p>
+      <p v-if="isLoading">Loading lectures...</p>
 
       <DetailDialog
         v-if="selectedLecture"
@@ -52,13 +54,17 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, watch} from '@vue/runtime-core';
+import {ref, onMounted, watch} from 'vue';
 import {useRouter, useRoute, onBeforeRouteUpdate} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
 import {useDateFormat} from '@vueuse/core';
 
 import ErrorMessage from '@/components/error/ErrorMessage.vue';
 import SortableTable from '@/components/SortableTable.vue';
+import DetailDialog from '@/components/dialog/DetailDialog.vue';
+
+import lectureListData from '@/assets/js/bwlp/lectureList.json';
+import lectureLocationsData from '@/assets/js/bwlp/LectureLocations.json';
 
 const formatDate = (timestamp: number, format: string) => {
   return useDateFormat(timestamp, format).value;
@@ -93,7 +99,6 @@ const columns = [
   },
 ];
 
-import DetailDialog from '@/components/dialog/DetailDialog.vue';
 import LectureDetailsTab from '@/components/dialog/LectureTabs/LectureDetailsTab.vue';
 import LectureRestrictionsTab from '@/components/dialog/LectureTabs/LectureRestrictionsTab.vue';
 import LectureFirewallTab from '@/components/dialog/LectureTabs/LectureFirewallTab.vue';
@@ -103,8 +108,6 @@ import LectureNetworkDrivesTab from '@/components/dialog/LectureTabs/LectureNetw
 import LectureLDAPFilterTab from '@/components/dialog/LectureTabs/LectureLDAPFilterTab.vue';
 import ImageLecturePermissionsTab from '@/components/dialog/ImageLecturePermissionsTab.vue';
 
-/// TODO: But for in a long time, we could make it a setting that the user can decide for themselves
-/// Use Pinia for it? it's per browser but we could make it somehow easily syncable
 const lectureTabs = [
   {
     id: 'details',
@@ -171,21 +174,33 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-import {useSatServer} from '@/composables/useSatServer';
-const sat = useSatServer();
-
 const lectureList = ref([]);
 const error = ref('');
 const showModal = ref(false);
 const selectedLecture = ref(null);
-const lectureLocations = ref({});
+const lectureLocations = ref(lectureLocationsData);
 const lecturePermissions = ref({});
+const isLoading = ref(false);
+
+const loadLectures = async () => {
+  isLoading.value = true;
+  error.value = '';
+  try {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    lectureList.value = lectureListData;
+  } catch (err) {
+    console.error('Failed to load lectures:', err);
+    error.value = 'Failed to load lectures from JSON.';
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 onMounted(() => {
   if (!authStore.authToken) {
     router.push('/login');
   } else {
-    fetchLectures().then(() => {
+    loadLectures().then(() => {
       if (route.name === 'LectureDetail' && route.params.id) {
         loadLectureById(route.params.id as string);
       }
@@ -193,70 +208,86 @@ onMounted(() => {
   }
 });
 
-const fetchLectures = async () => {
-  try {
-    const response = await sat.getLectureList(authStore.authToken, 0);
-    lectureList.value = response;
-    return response;
-  } catch (e) {
-    error.value = e.message;
-    return [];
-  }
-};
-
 const loadLectureById = async (lectureId: string) => {
+  error.value = '';
   try {
-    // Find the lecture in the list to confirm it exists
-    const lecture = lectureList.value.find(lec => lec.lectureId === lectureId);
+    console.log(`loadLectureById called for: ${lectureId}`);
+    const lectureInList = lectureList.value.find(lec => lec.lectureId === lectureId);
 
-    if (lecture) {
-      await openModal(lecture);
-    } else {
-      // Try to fetch it directly if not found in the list
-      selectedLecture.value = await sat.getLectureDetails(authStore.authToken, lectureId);
-      lectureLocations.value = await sat.getLocations(authStore.authToken, lectureId);
-      lecturePermissions.value = await sat.getLecturePermissions(authStore.authToken, lectureId);
+    if (!lectureInList && lectureList.value.length > 0) {
+      console.warn(`Lecture ID ${lectureId} not found in the initial list.`);
+    }
+
+    const details = lectureInList;
+    const permissions = {
+      edit:
+        lectureInList?.userPermissions?.edit || lectureInList?.defaultPermissions?.edit || false,
+      admin:
+        lectureInList?.userPermissions?.admin || lectureInList?.defaultPermissions?.admin || false,
+    };
+
+    if (details) {
+      selectedLecture.value = details;
+      lecturePermissions.value = permissions;
+      console.log(`loadLectureById: Setting showModal = true for ${lectureId}`);
       showModal.value = true;
+    } else {
+      console.error(`Details not found for lecture ID: ${lectureId}`);
+      error.value = `Details for lecture ${lectureId} not found.`;
+      selectedLecture.value = null;
+      console.log(`loadLectureById: Setting showModal = false due to error for ${lectureId}`);
+      showModal.value = false;
     }
   } catch (e) {
-    error.value = e.message;
+    console.error(`Error loading lecture ${lectureId}:`, e);
+    error.value = `Failed to load details for lecture ${lectureId}.`;
+    selectedLecture.value = null;
+    console.log(`loadLectureById: Setting showModal = false due to error for ${lectureId}`);
+    showModal.value = false;
   }
 };
 
 const openModal = async lecture => {
+  if (!lecture || !lecture.lectureId) {
+    error.value = 'Invalid lecture data provided.';
+    console.error('Attempted to open modal with invalid lecture:', lecture);
+    return;
+  }
+  error.value = '';
   try {
-    selectedLecture.value = await sat.getLectureDetails(authStore.authToken, lecture.lectureId);
-    lectureLocations.value = await sat.getLocations(authStore.authToken, lecture.lectureId);
-    lecturePermissions.value = await sat.getLecturePermissions(
-      authStore.authToken,
-      lecture.lectureId,
-    );
+    console.log('openModal called for:', lecture.lectureId);
+    selectedLecture.value = lecture;
+
+    lecturePermissions.value = {
+      edit: lecture.userPermissions?.edit || lecture.defaultPermissions?.edit || false,
+      admin: lecture.userPermissions?.admin || lecture.defaultPermissions?.admin || false,
+    };
 
     showModal.value = true;
-
-    if (route.name !== 'LectureDetail' || route.params.id !== lecture.lectureId) {
-      router.push({
-        name: 'LectureDetail',
-        params: {id: lecture.lectureId},
-      });
-    }
   } catch (e) {
-    error.value = e.message;
+    console.error('Error opening modal:', e);
+    error.value = `Failed to open details for lecture ${lecture.lectureName || lecture.lectureId}.`;
+    selectedLecture.value = null;
+    lecturePermissions.value = null;
+    showModal.value = false;
   }
 };
 
 const handleCloseDialog = () => {
+  console.log('handleCloseDialog called');
   showModal.value = false;
-  selectedLecture.value = null;
 };
 
 watch(
-  () => route.params,
-  newParams => {
-    if (route.name === 'LectureDetail' && newParams.id) {
-      const lectureId = newParams.id as string;
-      if (!showModal.value || selectedLecture.value?.lectureId !== lectureId) {
-        loadLectureById(lectureId);
+  () => route.params.id,
+  (newId, oldId) => {
+    if (route.name === 'LectureDetail' && newId && newId !== oldId) {
+      if (lectureList.value.length > 0) {
+        loadLectureById(newId as string);
+      } else {
+        loadLectures().then(() => {
+          loadLectureById(newId as string);
+        });
       }
     }
   },
@@ -265,20 +296,37 @@ watch(
 watch(
   () => route.name,
   (newRouteName, oldRouteName) => {
+    console.log(`Route name changed from ${oldRouteName} to ${newRouteName}`);
     if (newRouteName === 'LectureDetail' && route.params.id) {
       const lectureId = route.params.id as string;
-      if (!showModal.value || selectedLecture.value?.lectureId !== lectureId) {
-        loadLectureById(lectureId);
+      if (!selectedLecture.value || selectedLecture.value.lectureId !== lectureId) {
+        console.log(`Route name watcher: Loading lecture ${lectureId} for direct access/mismatch.`);
+        if (lectureList.value.length > 0) {
+          loadLectureById(lectureId);
+        } else {
+          loadLectures().then(() => loadLectureById(lectureId));
+        }
+      } else if (!showModal.value && selectedLecture.value?.lectureId === lectureId) {
+        console.log(`Route name watcher: Re-opening modal for ${lectureId}`);
+        showModal.value = true;
       }
     } else if (newRouteName === 'LectureList' && oldRouteName === 'LectureDetail') {
-      // Only close if we're navigating from detail to list
-      handleCloseDialog();
+      console.log('Route name watcher: Navigated back to list.');
+      if (showModal.value) {
+        handleCloseDialog();
+      }
+      selectedLecture.value = null;
+      lecturePermissions.value = {};
     }
   },
   {immediate: true},
 );
 
-onBeforeRouteUpdate(() => {
-  handleCloseDialog();
+onBeforeRouteUpdate((to, from) => {
+  if (!to.path.startsWith('/lecture') && from.path.startsWith('/lecture')) {
+    showModal.value = false;
+    selectedLecture.value = null;
+    lecturePermissions.value = {};
+  }
 });
 </script>

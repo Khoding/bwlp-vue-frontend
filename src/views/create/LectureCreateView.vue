@@ -10,7 +10,9 @@
       <ProgressIndicator v-model:currentStep="currentStep" :steps="steps" />
 
       <article class="large scroll">
-        <Step1BasicInfo v-show="currentStep === 1" v-model="itemData" />
+        <Transition name="page-slide-fast" mode="out-in">
+          <Step1BasicInfo v-if="currentStep === 1" v-model="itemData" />
+        </Transition>
       </article>
 
       <EditNavigationButtons
@@ -24,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from '@vue/runtime-core';
+import {ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
 
@@ -39,22 +41,25 @@ const router = useRouter();
 const authStore = useAuthStore();
 const devMode = ref(import.meta.env.VITE_DEVELOPMENT_MODE === 'true');
 
-import {useSatServer} from '@/composables/useSatServer';
-const sat = useSatServer();
-
-const steps = ref(['Basic Info', 'Permissions', 'Network', 'Advanced']);
+const steps = ref(['Basic Info']);
 
 const itemData = ref({
   lectureName: '',
   description: '',
+  imageVersionId: null,
+  imageBaseId: null,
   startTime: null,
   endTime: null,
-  isEnabled: false,
+  isEnabled: true,
   isExam: false,
-  hasInternetAccess: false,
-  hasUsbAccess: false,
+  hasInternetAccess: true,
+  hasUsbAccess: true,
   autoUpdate: false,
   limitToLocations: false,
+  defaultPermissions: {
+    edit: false,
+    admin: false,
+  },
 });
 const error = ref(null);
 const currentStep = ref(1);
@@ -68,12 +73,24 @@ const prevStep = () => {
 };
 
 const saveItem = async () => {
+  error.value = null;
   try {
-    await sat.createLecture(authStore.authToken, itemData.value);
-    router.push('/lecture');
+    console.log('--- Simulating Lecture Creation ---');
+    const dataToLog = {
+      ...itemData.value,
+      lectureId: `local-${Date.now()}`,
+      ownerId: authStore.userId || 'local-user',
+      updaterId: authStore.userId || 'local-user',
+      createTime: Math.floor(Date.now() / 1000),
+      updateTime: Math.floor(Date.now() / 1000),
+    };
+    console.log('Lecture Data to Create:', JSON.parse(JSON.stringify(dataToLog)));
+    console.log('---------------------------------');
+
+    router.push({name: 'LectureList'});
   } catch (err) {
-    console.error('Failed to create lecture:', err);
-    error.value = err;
+    console.error('Error during simulated creation:', err);
+    error.value = 'An unexpected error occurred during creation simulation.';
   }
 };
 </script>
