@@ -15,6 +15,7 @@ import LectureDuplicateView from '@/views/duplicate/LectureDuplicateView.vue';
 
 import UserAgreementView from '@/views/legal-views/UserAgreementView.vue';
 import PrivacyPolicyView from '@/views/legal-views/PrivacyPolicyView.vue';
+import AuthView from '@/views/authView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -44,6 +45,12 @@ const routes: RouteRecordRaw[] = [
         next();
       }
     },
+  },
+  {
+   path: "/auth",
+   name: "Authentification",
+   component: AuthView,
+   meta: {title: 'Authentifizierung'}
   },
   {
     path: '/image',

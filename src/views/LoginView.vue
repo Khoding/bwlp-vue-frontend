@@ -2,28 +2,17 @@
   <div class="login-view">
     <h2>Login</h2>
 
-    <form @submit.prevent="login">
-      <div class="field label round border">
-        <input type="text" id="username" v-model="username" required />
-        <label>Username</label>
-      </div>
-
-      <div class="field label round border">
-        <input type="password" id="password" v-model="password" required />
-        <label>Password</label>
-      </div>
-
-      <button type="submit">Login</button>
-
-      <p v-if="error" class="error-message">{{ error }}</p>
-    </form>
+    <button @click="login()">
+      Login via Shibboleth
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref} from '@vue/runtime-core';
+import {defineComponent, onMounted, ref} from '@vue/runtime-core';
 import {useRouter} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
+import { generateLoginURL } from "@/auth/auth"
 
 import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
 import {Thrift} from '@/assets/js/thrift/thrift.js';
@@ -32,7 +21,12 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
+const redirectTo= 'http://localhost:5173/auth'
+let token: string | null
+token = router.currentRoute.value.fullPath
 
+
+// https://bwlp-masterserver.ruf.uni-freiburg.de/webif/shib/client_auth.php?token=daas-schrott&dest=https://ca5.de/
 const proto = new Thrift.Protocol(new Thrift.Transport(`https://${mainServer}/thrift/`));
 const main = new MasterServerClient(proto);
 
@@ -41,15 +35,22 @@ const password = ref('');
 const error = ref('');
 
 const login = async () => {
-  try {
-    const response = await main.localAccountLogin(username.value, password.value);
+  const redirectUrl = generateLoginURL({
+    MasterServerURL: "https://bwlp-masterserver.ruf.uni-freiburg.de/webif/shib/client_auth.php",
+    Params: new Map<string, string>().set("token", "daas-schrott").set("dest", redirectTo).set("response_type", "code")
+  })
+  console.log(redirectUrl)
+  window.location.replace(redirectUrl);
 
-    authStore.setToken(response.authToken);
+  // try {
+  //   const response = await main.localAccountLogin(username.value, password.value);
 
-    router.push('/image');
-  } catch (e) {
-    error.value = e.message;
-  }
+  //   authStore.setToken(response.authToken);
+
+  //   router.push('/image');
+  // } catch (e) {
+  //   error.value = e.message;
+  // }
 };
 </script>
 
