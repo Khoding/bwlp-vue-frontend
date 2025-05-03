@@ -14,18 +14,18 @@ export function generateLoginURL(settings: AuthSettings): string {
     return settings.MasterServerURL + "?" + getUrlParamsString(settings.Params)
 }
 
-export function getTokenFromUrl(url: string): string { 
+export function getTokenFromUrl(url: string): string | null { 
     let keyVals = new Map<string, string>()
     const urlSplit = url.split("#")
     if (urlSplit.length == 2) {
         const params = urlSplit[1].split("&")
-        
         params.forEach((keyValString) => {
             const splitted = keyValString.split("=")
             keyVals.set(splitted[0], splitted[1])
         })
+        return keyVals.get("token")
     }
-    return keyVals["token"]
+    else return null
 }
 
 function getUrlParamsString(params: Map<string, string>): string {
