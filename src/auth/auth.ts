@@ -1,13 +1,20 @@
+import { SatelliteSever } from "@/satellites/satellite";
 
 type AuthSettings = {
     MasterServerURL: string,
     Params: Map<string, string>
 }
 
-type Auth = {
-    Username: string,
-    Role:  string,
-    Token: string,
+type UserAuthInfo = {
+    status: "ok" | "error"
+    firstname: string,
+    lastname: string,
+    email: string,
+    userId: string,
+    organizationId: string,
+    satellites2: Array<SatelliteSever>;
+    token: string,
+    sessionId: string
 }
 
 export function generateLoginURL(settings: AuthSettings): string {
@@ -38,3 +45,23 @@ function getUrlParamsString(params: Map<string, string>): string {
     return paramsString.slice(0, -1)
 }
 
+export function getJsonFromURLParams(url: string): UserAuthInfo | null {
+    const urlRegexPattern = RegExp("[#|?]")
+    if (!url.match(urlRegexPattern)) {
+        return null
+    }
+    let paramMap = new Map<string, string>()
+    const urlParams = url.split(urlRegexPattern)[1].split("&")
+    urlParams.forEach((keyValString) => {
+        const keyValSplit = keyValString.split("=")
+        const key = decodeURI(keyValSplit[0])
+        const val = decodeURI(keyValSplit[1])
+        paramMap.set(key, val)
+    })
+
+    if (!paramMap.has("data"))  {
+        return null
+    }
+    const userAuthInfo = JSON.parse(paramMap.get("data")) as UserAuthInfo
+    return userAuthInfo
+}

@@ -8,35 +8,31 @@
   <script setup lang="ts">
   import {LocationQuery, useRouter} from 'vue-router';
   import {useAuthStore} from '@/stores/auth-store';
-  
-  import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
-  import {Thrift} from '@/assets/js/thrift/thrift.js';
-  
-  const router = useRouter();
-  const authStore = useAuthStore();
+  import { useSatelliteStore } from '@/stores/satellites';
 
-  const query = router.currentRoute.value.query
-  if (query.token) {
-    const token = query.token
-    const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
-    const proto = new Thrift.Protocol(new Thrift.Transport(`https://${mainServer}/thrift/`));
-    const main = new MasterServerClient(proto)
-    console.log("SENDING THRIFT STUFF")
-    try {
-        const response = await main.isServerAuthenticated(token)
-        console.log("response:", response)
-    } catch (error) {
-        console.error(error)
-    }
-    // TODO: validate token via whoami
-  } else {
-    // Show message that explains that login failed
-    // router.push("/login")
-  }
+  import { getJsonFromURLParams } from '@/auth/auth';
   
-  // https://bwlp-masterserver.ruf.uni-freiburg.de/webif/shib/client_auth.php?token=daas-schrott&dest=https://ca5.de/
-    //   const proto = new Thrift.Protocol(new Thrift.Transport(`https://${mainServer}/thrift/`));
-    //   const main = new MasterServerClient(proto);
+  const router = useRouter()
+  const authStore = useAuthStore()
+  const satelliteStore = useSatelliteStore()
+
+  const query = router.currentRoute.value.fullPath
+  const userAuthInfo = getJsonFromURLParams(query)
+
+  if (userAuthInfo) {
+    try {
+        //TODO: Validate Received Token against the masterserver.
+        authStore.setToken(userAuthInfo.sessionId)
+        satelliteStore.setSatellites(userAuthInfo.satellites2)
+        router.push("/image")
+    } catch (error) {
+      console.log("Could not handle thrift request")
+      // Seite anzeigen, dass etwas fehlgeschlagen ist
+    }
+    
+  } else {
+    // Seite anzeigen die Sagt, dass redirect fehlgeschlagen ist
+  }
   </script>
   
   <style scoped>
