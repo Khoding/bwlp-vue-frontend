@@ -15,7 +15,7 @@ import LectureDuplicateView from '@/views/duplicate/LectureDuplicateView.vue';
 
 import UserAgreementView from '@/views/legal-views/UserAgreementView.vue';
 import PrivacyPolicyView from '@/views/legal-views/PrivacyPolicyView.vue';
-import AuthView from '@/views/authView.vue';
+import AuthView from '@/views/AuthView.vue';
 
 const routes: RouteRecordRaw[] = [
   {

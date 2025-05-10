@@ -52,6 +52,7 @@
 import {ref, onMounted, watch} from '@vue/runtime-core';
 import {useRouter, useRoute, onBeforeRouteUpdate} from 'vue-router';
 import {useAuthStore} from '@/stores/auth-store';
+import {useSatServer} from '@/composables/useSatServer';
 import {useDateFormat} from '@vueuse/core';
 
 import ErrorMessage from '@/components/error/ErrorMessage.vue';
@@ -120,12 +121,10 @@ const imageTabs = [
     }),
   },
 ];
-
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-import {useSatServer} from '@/composables/useSatServer';
 const sat = useSatServer();
 
 const imageList = ref([]);

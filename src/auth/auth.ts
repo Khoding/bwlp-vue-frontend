@@ -1,4 +1,4 @@
-import { SatelliteSever } from "@/satellites/satellite";
+import { SatelliteServer } from "@/satellites/satellite";
 
 type AuthSettings = {
     MasterServerURL: string,
@@ -12,7 +12,7 @@ type UserAuthInfo = {
     email: string,
     userId: string,
     organizationId: string,
-    satellites2: Array<SatelliteSever>;
+    satellites2: Array<SatelliteServer>;
     token: string,
     sessionId: string
 }
@@ -62,6 +62,15 @@ export function getJsonFromURLParams(url: string): UserAuthInfo | null {
     if (!paramMap.has("data"))  {
         return null
     }
-    const userAuthInfo = JSON.parse(paramMap.get("data")) as UserAuthInfo
+    let userAuthInfo = JSON.parse(paramMap.get("data")) as UserAuthInfo
+    const satsObj = JSON.parse(paramMap.get("data"))
+    const keys = Object.keys(satsObj["satellites2"])
+    let satServers = Array<SatelliteServer>()
+    keys.forEach((sat) => {
+        let satServer = satsObj["satellites2"][sat] as SatelliteServer
+        satServer.name = sat
+        satServers.push(satServer)
+    })
+    userAuthInfo.satellites2 = satServers
     return userAuthInfo
 }

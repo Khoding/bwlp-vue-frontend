@@ -1,17 +1,17 @@
 import {defineStore} from 'pinia';
 import {ref} from '@vue/runtime-core';
-import { SatelliteSever } from '@/satellites/satellite';
+import { SatelliteServer } from '@/satellites/satellite';
 
 export const useSatelliteStore = defineStore('satellites', () => {
-  const satellites = ref(localStorage.getItem('satellites') || '');
+  const satellites = ref(localStorage.getItem('satellitesServer') || '');
 
-  function setSatellites(satellites: Array<SatelliteSever>) {
-    localStorage.setItem("satelliteServers",JSON.stringify(satellites))
+  function setSatellites(satellites: Array<SatelliteServer>) {
+    localStorage.setItem("satellitesServer", JSON.stringify(satellites))
   }
 
   function clearSatellites() {
     satellites.value = '';
-    localStorage.removeItem('satellites');
+    localStorage.removeItem('satellitesServer');
   }
 
   return {satellites, setSatellites, clearSatellites};

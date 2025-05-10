@@ -6,12 +6,12 @@
   </template>
   
   <script setup lang="ts">
-  import {LocationQuery, useRouter} from 'vue-router';
+  import {useRouter} from 'vue-router';
   import {useAuthStore} from '@/stores/auth-store';
   import { useSatelliteStore } from '@/stores/satellites';
 
   import { getJsonFromURLParams } from '@/auth/auth';
-  
+import { useSatServer } from '@/composables/useSatServer';
   const router = useRouter()
   const authStore = useAuthStore()
   const satelliteStore = useSatelliteStore()
@@ -22,11 +22,13 @@
   if (userAuthInfo) {
     try {
         //TODO: Validate Received Token against the masterserver.
-        authStore.setToken(userAuthInfo.sessionId)
+        authStore.setToken(userAuthInfo.token)
         satelliteStore.setSatellites(userAuthInfo.satellites2)
         router.push("/image")
     } catch (error) {
       console.log("Could not handle thrift request")
+      console.log(error)
+        
       // Seite anzeigen, dass etwas fehlgeschlagen ist
     }
     
