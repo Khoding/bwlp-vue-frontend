@@ -1,6 +1,6 @@
   <template>
     <div>
-      <Modal
+      <SatelliteSelectionModal
         :isVisible="showModal"
         :keyValuePairs="options"
         @close="showModal = false"
@@ -20,9 +20,9 @@
 
 
     import { getJsonFromURLParams, UserAuthInfo } from '@/auth/auth';
-    import Modal from '@/components/Modal.vue';
     import { onMounted, ref } from 'vue';
     import { SatelliteServer } from '@/satellites/satellite';
+    import SatelliteSelectionModal from '@/components/SatelliteSelectionModal.vue';
     
     const router = useRouter()
     const authStore = useAuthStore()
