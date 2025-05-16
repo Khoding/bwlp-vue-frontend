@@ -5,7 +5,7 @@ type AuthSettings = {
     Params: Map<string, string>
 }
 
-type UserAuthInfo = {
+export type UserAuthInfo = {
     status: "ok" | "error"
     firstname: string,
     lastname: string,

@@ -1,54 +1,83 @@
 <template>
-    <div class="auth-view">
-        <p> Sie werden weitergeleitet. Bitte warten ... </p>
-        <p>You are being redirected. Please wait ...</p>
-    </div>
-  </template>
+  <div>
+    <Modal
+      :isVisible="showModal"
+      :keyValuePairs="options"
+      @close="showModal = false"
+      @selected="handleSelection"
+      @choice-sumbit="submitChoice"
+    />
+  </div>
+</template>
   
-  <script setup lang="ts">
+<script setup lang="ts">
   import {useRouter} from 'vue-router';
   import {useAuthStore} from '@/stores/auth-store';
   import { useSatelliteStore } from '@/stores/satellites';
 
-  import { getJsonFromURLParams } from '@/auth/auth';
-import { useSatServer } from '@/composables/useSatServer';
+  import { Thrift } from "@/assets/js/thrift/thrift.js";
+  import { MasterServerClient } from "@/assets/js/bwlp/bwlp.js";
+
+
+  import { getJsonFromURLParams, UserAuthInfo } from '@/auth/auth';
+  import Modal from '@/components/Modal.vue';
+  import { onMounted, ref } from 'vue';
+  import { SatelliteServer } from '@/satellites/satellite';
+  
   const router = useRouter()
   const authStore = useAuthStore()
   const satelliteStore = useSatelliteStore()
 
+  let showModal = ref(false)
+  let options = ref(null)
+  let satelliteSelected = false
+
   const query = router.currentRoute.value.fullPath
   const userAuthInfo = getJsonFromURLParams(query)
 
+  const masterServerURL = "bwlp-masterserver.ruf.uni-freiburg.de"
+  const proto = new Thrift.Protocol(new Thrift.Transport(`https://${masterServerURL}/thrift/`))
+  const masterServerClient = new MasterServerClient(proto)
+
+  onMounted(async () => {
   if (userAuthInfo) {
     try {
-        //TODO: Validate Received Token against the masterserver.
-        authStore.setToken(userAuthInfo.token)
-        satelliteStore.setSatellites(userAuthInfo.satellites2)
-        router.push("/image")
+      const ServerResponse = await masterServerClient.getUserFromToken(userAuthInfo.token) as UserAuthInfo;
+
+      if (ServerResponse.userId === userAuthInfo.userId) {
+        authStore.setToken(userAuthInfo.token);
+        satelliteStore.setSatellites(userAuthInfo.satellites2);
+        options.value = createOptions(userAuthInfo.satellites2);
+        showModal.value = true;
+      } else {
+        // REDIRECT TO SOME ERROR PAGE PERHAPS
+      }
     } catch (error) {
-      console.log("Could not handle thrift request")
-      console.log(error)
-        
+      console.log("Could not handle thrift request");
+      console.log(error);
       // Seite anzeigen, dass etwas fehlgeschlagen ist
     }
-    
   } else {
     // Seite anzeigen die Sagt, dass redirect fehlgeschlagen ist
   }
-  </script>
-  
-  <style scoped>
-  .login-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    inline-size: 320px;
-    margin-inline: auto;
-  
-    button {
-      display: flex;
-      margin-inline: auto;
-    }
-  }
-  </style>
-  
+});
+
+function handleSelection(key: string) {
+
+  console.log("sat selection: ", options[key])
+  satelliteStore.setSelectedSatellite(options[key])
+  satelliteSelected = true
+}
+
+function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
+  let sats: Record<string, SatelliteServer> = {}
+  satellites.forEach((sat) => {
+    sats[sat.name] = sat
+  })
+  return sats
+}
+
+function submitChoice() {
+  router.push("/image")
+}
+</script>
