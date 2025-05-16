@@ -1,9 +1,8 @@
-import { getCurrentInstance } from 'vue';
+import { computed, getCurrentInstance } from 'vue';
 
-import { Thrift } from '@/assets/js/thrift/thrift.js';
 import { SatelliteServerClient } from '@/assets/js/bwlp/bwlp.js';
+import { Thrift } from '@/assets/js/thrift/thrift.js';
 import { useSatelliteStore } from '@/stores/satellites';
-import { SatelliteServer } from '@/satellites/satellite';
 
 export function useSatServer(): SatelliteServerClient {
   const app = getCurrentInstance()
@@ -27,7 +26,7 @@ export function useSatServerOSVDI() {
 }
 
 function getSelectedSatelliteAddress(): string | undefined {
-  const selected = JSON.parse(useSatelliteStore().selectedSatellite) as SatelliteServer
+  const selected = computed(() => useSatelliteStore().selectedSatellite).value;
 
   //TODO: Find out which server to use in future
   return selected.addresses[0]

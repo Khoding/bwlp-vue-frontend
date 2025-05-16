@@ -1,23 +1,30 @@
-import {defineStore} from 'pinia';
-import {ref} from '@vue/runtime-core';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import { SatelliteServer } from '@/satellites/satellite';
 
 export const useSatelliteStore = defineStore('satellites', () => {
-  const satellites = ref(localStorage.getItem('satellitesServer') || '');
-  const selectedSatellite = ref(localStorage.getItem("selectedSatelliteServer") || '')
+  const satellites = ref<SatelliteServer[]>(JSON.parse(localStorage.getItem('satellitesServer') || '[]'));
+  const selectedSatellite = ref<SatelliteServer | null>(JSON.parse(localStorage.getItem("selectedSatelliteServer") || 'null'));
 
-  function setSatellites(satellites: Array<SatelliteServer>) {
-    localStorage.setItem("satellitesServer", JSON.stringify(satellites))
+  function setSatellites(satellitesArray: Array<SatelliteServer>) {
+    satellites.value = satellitesArray;
+    localStorage.setItem("satellitesServer", JSON.stringify(satellitesArray));
   }
 
   function clearSatellites() {
-    satellites.value = '';
+    satellites.value = [];
     localStorage.removeItem('satellitesServer');
   }
 
   function setSelectedSatellite(satellite: SatelliteServer) {
-    localStorage.setItem("selectedSatelliteServer", JSON.stringify(satellite))
+    selectedSatellite.value = satellite;
+    localStorage.setItem("selectedSatelliteServer", JSON.stringify(satellite));
   }
 
-  return {satellites, selectedSatellite, setSatellites, clearSatellites, setSelectedSatellite};
+  function clearSelectedSatellite() {
+    selectedSatellite.value = null;
+    localStorage.removeItem('selectedSatelliteServer');
+  }
+
+  return { satellites, selectedSatellite, setSatellites, clearSatellites, setSelectedSatellite, clearSelectedSatellite };
 });
