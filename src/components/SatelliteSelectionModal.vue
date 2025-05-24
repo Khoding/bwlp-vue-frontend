@@ -8,11 +8,12 @@
         </div>
         <div class="select-items" :class="{ show: isDropdownOpen }">
           <div
-            v-for="(value, key) in keyValuePairs"
+            v-for="(value, key) in options"
+            :value="value"
             :key="key"
-            @click="selectOption(key)"
+            @click="selectOption(key, value)"
           >
-            {{ key }} - {{ value }}
+            {{ key }}
           </div>
         </div>
       </div>
@@ -24,21 +25,26 @@
 
 <script setup lang="ts">
 import { SatelliteServer } from '@/satellites/satellite';
+import { useSatelliteStore } from '@/stores/satellites';
 import { defineProps, defineEmits, ref } from 'vue';
 
 const props = defineProps<{
   isVisible: boolean;
-  keyValuePairs: Record<string, SatelliteServer>;
+  options: Record<string, SatelliteServer> | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'selected', key: string): void;
-  (e: 'choiceSumbit'): void;
+  (e: 'submitChoice'): void;
 }>();
 
-const selectedKey = ref<string>('');
+const satelliteStore = useSatelliteStore()
+
 const isDropdownOpen = ref<boolean>(false);
+
+const satelliteSelected =  ref<boolean>(false)
+
+const selectedKey = ref<string | null>(null)
 
 function closeModal() {
   emit('close');
@@ -48,19 +54,18 @@ function toggleDropdown() {
   isDropdownOpen.value = !isDropdownOpen.value;
 }
 
-function selectOption(key: string) {
-  selectedKey.value = key;
+function selectOption(key: string, satServer: SatelliteServer) {
+  selectedKey.value = key
   isDropdownOpen.value = false;
-  emitSelection();
-}
-
-function emitSelection() {
-  emit('selected', selectedKey.value);
+  satelliteStore.setSelectedSatellite(satServer)
+  satelliteSelected.value = true
 }
 
 function submitChoice() {
-  emit('choiceSumbit');
+  //closeModal()
+  emit("submitChoice")
 }
+
 </script>
 
 <style scoped>

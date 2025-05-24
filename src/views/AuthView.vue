@@ -2,10 +2,9 @@
     <div>
       <SatelliteSelectionModal
         :isVisible="showModal"
-        :keyValuePairs="options"
+        :options="options"
         @close="showModal = false"
-        @selected="handleSelection"
-        @choice-sumbit="submitChoice"
+        @submit-choice="submitChoice"
       />
     </div>
   </template>
@@ -30,7 +29,7 @@
 
     let showModal = ref(false)
     let options = ref(null)
-    let satelliteSelected = ref(false)
+    
 
     const query = router.currentRoute.value.fullPath
     const userAuthInfo = getJsonFromURLParams(query)
@@ -47,7 +46,7 @@
         if (ServerResponse.userId === userAuthInfo.userId) {
           authStore.setToken(userAuthInfo.token);
           satelliteStore.setSatellites(userAuthInfo.satellites2);
-          options.value = createOptions(userAuthInfo.satellites2);
+          options = ref(createOptions(userAuthInfo.satellites2))
           showModal.value = true;
         } else {
           // REDIRECT TO SOME ERROR PAGE PERHAPS
@@ -58,24 +57,37 @@
         // Seite anzeigen, dass etwas fehlgeschlagen ist
       }
     } else {
-      // Seite anzeigen die Sagt, dass redirect fehlgeschlagen ist
+      if (authStore.authToken) {
+        if (satelliteStore.selectedSatellite) {
+            router.push("/images")
+        } else {
+          if(satelliteStore.satellites.length > 0) {
+            showModal.value = true
+          } else {
+            // user authenticated but no satellitesServer found
+            // maybe redirect them back to /login?
+            // TODO: find out if there is a better wa to do this:
+            authStore.clearToken()
+            router.push("/login")
+          }
+        }
+      } else {
+        // No auth token found, back to login with you
+        router.push("/login")
+      }
     }
+  
   });
-
-  function handleSelection(key: string) {
-    satelliteStore.setSelectedSatellite(options.value[key])
-    satelliteSelected = ref(true)
-  }
-
-  function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
-    let sats: Record<string, SatelliteServer> = {}
-    satellites.forEach((sat) => {
-      sats[sat.name] = sat
-    })
-    return sats
-  }
 
   function submitChoice() {
     router.push("/image")
   }
+
+  function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
+  let sats: Record<string, SatelliteServer> = {}
+  satellites.forEach((sat) => {
+    sats[sat.name] = sat
+  })
+  return sats
+}
   </script>
