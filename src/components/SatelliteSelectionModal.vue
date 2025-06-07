@@ -19,6 +19,18 @@
       </div>
       <button @click="submitChoice">Server auswählen</button>
       <button @click="closeModal">Schließen</button>
+      <div class="own-ip-address">
+        <p>
+          Wenn Sie eine andere IP-Adresse eintragen möchten klicken sie <span class="open-form"  @click="toggleForm"> hier </span>
+        </p>
+        <form @submit.prevent="saveCustomIpAddress()" v-if="showForm">
+          <div class="field label round border">
+            <input type="text" id="username" v-model="customIpAddress"  required/>
+            <label>Eigene IP Adresse Verwenden</label>
+          </div>
+          <button type="submit">Eigene IP-Adresse eingeben</button>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -34,8 +46,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'submit'): void;
+  (e: 'close'): void
+  (e: 'submit'): void
+  (e: "custom-ip-submit"): void
 }>();
 
 const satelliteStore = useSatelliteStore()
@@ -45,6 +58,10 @@ const isDropdownOpen = ref<boolean>(false);
 const satelliteSelected =  ref<boolean>(false)
 
 const selectedKey = ref<string | null>(null)
+
+const customIpAddress = ref<string | null>(null)
+
+const showForm = ref<boolean>(false)
 
 function closeModal() {
   emit('close');
@@ -65,6 +82,23 @@ function submitChoice() {
   emit("submit")
 }
 
+function toggleForm() {
+  showForm.value = !showForm.value
+}
+
+function saveCustomIpAddress() {
+  if (customIpAddress.value) {
+    const sat : SatelliteServer = {
+      name: "Customserver",
+      addresses: [customIpAddress.value],
+    }
+    satelliteStore.setSelectedSatellite(sat)
+    emit("custom-ip-submit")
+  } else {
+    //TODO: Raise some Error here
+  }
+}
+
 
 </script>
 
@@ -80,6 +114,12 @@ function submitChoice() {
   align-items: center;
   z-index: 9999;
   background-color: var(--surface);
+}
+
+.open-form {
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .modal {
@@ -141,6 +181,10 @@ function submitChoice() {
 
 .select-items.show {
   display: block;
+}
+
+.own-ip-address {
+  margin-top: 5vh;
 }
 
 </style>

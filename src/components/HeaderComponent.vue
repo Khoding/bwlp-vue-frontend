@@ -46,6 +46,7 @@
         :options="options"
         @close="closeModal"
         @submit="submitChoice"
+        @custom-ip-submit="submitCustomIp"
   />
 </template>
 
@@ -96,6 +97,11 @@ function submitChoice() {
 
 function closeModal() {
   showModal.value = false
+}
+
+function submitCustomIp() {
+  showModal.value = false
+  router.go(0)
 }
 
 </script>

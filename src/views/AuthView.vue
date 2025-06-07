@@ -5,6 +5,7 @@
         :options="options"
         @close="showModal = false"
         @submit="submitChoice"
+        @custom-ip-submit="submitCustomIp"
       />
       
     <router-view :key="$route.fullPath"></router-view>
@@ -90,10 +91,14 @@
   }
 
   function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
-  let sats: Record<string, SatelliteServer> = {}
-  satellites.forEach((sat) => {
-    sats[sat.name] = sat
-  })
-  return sats
-}
+    let sats: Record<string, SatelliteServer> = {}
+    satellites.forEach((sat) => {
+      sats[sat.name] = sat
+    })
+    return sats
+  }
+  
+  async function submitCustomIp() {
+    await router.push("/image")
+  }
   </script>
