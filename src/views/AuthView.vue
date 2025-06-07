@@ -4,7 +4,7 @@
         :isVisible="showModal"
         :options="options"
         @close="showModal = false"
-        @submit-choice="submitChoice"
+        @submit="submitChoice"
       />
     </div>
   </template>
@@ -80,6 +80,7 @@
   });
 
   function submitChoice() {
+    showModal.value = false
     router.push("/image")
   }
 

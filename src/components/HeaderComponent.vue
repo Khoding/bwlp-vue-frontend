@@ -44,9 +44,8 @@
   <SatelliteSelectionModal
         :isVisible="showModal"
         :options="options"
-        @close="showModal = false"
-        @choice-sumbit="submitChoice"
-
+        @close="closeModal"
+        @submit="submitChoice"
   />
 </template>
 
@@ -74,10 +73,12 @@ const logout = (): void => {
 };
   
 function openSatelliteSelection() {
-  showModal = ref(true)
   if (!options) {
     options.value = createOptions(satelliteStore.satellites)
+    showModal.value = true
   }
+  showModal.value = true
+  options.value = createOptions(satelliteStore.satellites)
 }
 
 function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
@@ -89,7 +90,12 @@ function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteS
 }
 
 function submitChoice() {
-  return ""
+  showModal.value = false
+  window.location.replace("/login")
+}
+
+function closeModal() {
+  showModal.value = false
 }
 
 </script>

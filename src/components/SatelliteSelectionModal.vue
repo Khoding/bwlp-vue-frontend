@@ -35,7 +35,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'submitChoice'): void;
+  (e: 'submit'): void;
 }>();
 
 const satelliteStore = useSatelliteStore()
@@ -62,9 +62,9 @@ function selectOption(key: string, satServer: SatelliteServer) {
 }
 
 function submitChoice() {
-  //closeModal()
-  emit("submitChoice")
+  emit("submit")
 }
+
 
 </script>
 
@@ -78,6 +78,8 @@ function submitChoice() {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 9999;
+  background-color: var(--surface);
 }
 
 .modal {
