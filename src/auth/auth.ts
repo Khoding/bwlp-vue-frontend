@@ -1,4 +1,4 @@
-import { SatelliteServer } from "@/satellites/satellite";
+import { getSatellitesFromLocalTestResponse, LocalLoginSatellites, SatelliteServer } from "@/satellites/satellite";
 
 type AuthSettings = {
     MasterServerURL: string,
@@ -15,6 +15,22 @@ export type UserAuthInfo = {
     satellites2: Array<SatelliteServer>;
     token: string,
     sessionId: string
+}
+
+export type ClientSessionData = {
+    authToken: string,
+    satellites: Array<LocalLoginSatellites>,
+    sessionId: string,
+    userInfo: LocalUserInfo
+}
+
+type LocalUserInfo = {
+    email: string,
+    firstName: string,
+    lastName: string,
+    organizationId: string
+    role: number,
+    userId: string
 }
 
 export function generateLoginURL(settings: AuthSettings): string {
@@ -73,4 +89,18 @@ export function getJsonFromURLParams(url: string): UserAuthInfo | null {
     })
     userAuthInfo.satellites2 = satServers
     return userAuthInfo
+}
+
+export function getUserAuthInfoFromClientSessionData(clientSessionData: ClientSessionData): UserAuthInfo {
+    return {
+        email: clientSessionData.userInfo.email,
+        firstname: clientSessionData.userInfo.firstName,
+        lastname: clientSessionData.userInfo.lastName,
+        organizationId: clientSessionData.userInfo.organizationId,
+        satellites2: getSatellitesFromLocalTestResponse(clientSessionData.satellites),
+        sessionId: clientSessionData.sessionId,
+        status: "ok",
+        token: clientSessionData.authToken,
+        userId: clientSessionData.userInfo.userId
+    }
 }

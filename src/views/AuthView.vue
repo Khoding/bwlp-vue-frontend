@@ -6,12 +6,14 @@
         @close="showModal = false"
         @submit="submitChoice"
       />
+      
+    <router-view :key="$route.fullPath"></router-view>
     </div>
   </template>
     
   <script setup lang="ts">
-    import {useRouter} from 'vue-router';
-    import {useAuthStore} from '@/stores/auth-store';
+    import { useRouter } from 'vue-router';
+    import { useAuthStore } from '@/stores/auth-store';
     import { useSatelliteStore } from '@/stores/satellites';
 
     import { Thrift } from "@/assets/js/thrift/thrift.js";
@@ -22,10 +24,13 @@
     import { onMounted, ref } from 'vue';
     import { SatelliteServer } from '@/satellites/satellite';
     import SatelliteSelectionModal from '@/components/SatelliteSelectionModal.vue';
+
+    
     
     const router = useRouter()
     const authStore = useAuthStore()
     const satelliteStore = useSatelliteStore()
+
 
     let showModal = ref(false)
     let options = ref(null)
@@ -59,7 +64,7 @@
     } else {
       if (authStore.authToken) {
         if (satelliteStore.selectedSatellite) {
-            router.push("/images")
+            router.push("/image")
         } else {
           if(satelliteStore.satellites.length > 0) {
             showModal.value = true
@@ -73,7 +78,7 @@
         }
       } else {
         // No auth token found, back to login with you
-        router.push("/login")
+        await router.push("/login")
       }
     }
   
@@ -81,7 +86,7 @@
 
   function submitChoice() {
     showModal.value = false
-    router.push("/image")
+    router.push("/images")
   }
 
   function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
