@@ -49,8 +49,8 @@ let token: string | null
 token = router.currentRoute.value.fullPath
 
 
-const username = ref('test@uni-freiburg.de')
-const password = ref('123456')
+const username = ref('')
+const password = ref('')
 const error = ref('')
 
 const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';

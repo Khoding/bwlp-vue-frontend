@@ -86,7 +86,7 @@
 
   function submitChoice() {
     showModal.value = false
-    router.push("/images")
+    router.push("/image")
   }
 
   function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {

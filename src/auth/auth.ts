@@ -84,7 +84,7 @@ export function getJsonFromURLParams(url: string): UserAuthInfo | null {
     let satServers = Array<SatelliteServer>()
     keys.forEach((sat) => {
         let satServer = satsObj["satellites2"][sat] as SatelliteServer
-        satServer.name = sat
+        satServer.name = satsObj["satellites2"][sat]["name"] ?? sat
         satServers.push(satServer)
     })
     userAuthInfo.satellites2 = satServers
