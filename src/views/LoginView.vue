@@ -1,4 +1,5 @@
 <template>
+  <div>
   <div class="login-view">
     <h2>Login</h2>
     <p> Loggen Sie sich hier mit Ihrem Hochschulaccount über Shibboleth ein:</p>
@@ -26,7 +27,7 @@
       <p v-if="error" class="error-message">{{ error }}</p>
     </form>
   </div>
-
+  </div>
 </template>
 
 <script setup lang="ts">

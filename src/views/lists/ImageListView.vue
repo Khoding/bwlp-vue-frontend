@@ -128,7 +128,7 @@ const authStore = useAuthStore();
 const sat = useSatServer();
 
 const imageList = ref([]);
-const error = ref('');
+const error = ref<Error | null>(null);
 const showModal = ref(false);
 const selectedImage = ref(null);
 const imagePermissions = ref({});
@@ -151,7 +151,9 @@ const fetchImages = async () => {
     imageList.value = response;
     return response;
   } catch (e) {
-    error.value = e.message;
+    const message = `There has been an error getting your virtual images from the server.
+    Please check the server you are trying to connect to: ${e.message}`
+    error.value = new Error(message);
     return [];
   }
 };
@@ -168,7 +170,8 @@ const loadImageById = async (imageId: string) => {
       showModal.value = true;
     }
   } catch (e) {
-    error.value = e.message;
+    const message = `There has been an error trying to access image: ${imageId}. Error: ${e.message}` 
+    error.value = new Error(message);
   }
 };
 

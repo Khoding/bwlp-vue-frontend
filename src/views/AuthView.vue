@@ -1,5 +1,10 @@
   <template>
     <div>
+      <ErrorMessage
+      default-message="Something unexpected happened error while authenticating. Please try again later"
+      :error="err">
+
+      </ErrorMessage>
       <SatelliteSelectionModal
         :isVisible="showModal"
         :options="options"
@@ -7,8 +12,6 @@
         @submit="submitChoice"
         @custom-ip-submit="submitCustomIp"
       />
-      
-    <router-view :key="$route.fullPath"></router-view>
     </div>
   </template>
     
@@ -25,9 +28,8 @@
     import { onMounted, ref } from 'vue';
     import { SatelliteServer } from '@/satellites/satellite';
     import SatelliteSelectionModal from '@/components/SatelliteSelectionModal.vue';
-
-    
-    
+    import ErrorMessage from '@/components/error/ErrorMessage.vue';
+ 
     const router = useRouter()
     const authStore = useAuthStore()
     const satelliteStore = useSatelliteStore()
@@ -36,6 +38,7 @@
     let showModal = ref(false)
     let options = ref(null)
     
+    let err = ref<Error | null>(null)
 
     const query = router.currentRoute.value.fullPath
     const userAuthInfo = getJsonFromURLParams(query)
@@ -55,15 +58,16 @@
           options = ref(createOptions(userAuthInfo.satellites2))
           showModal.value = true;
         } else {
-          // REDIRECT TO SOME ERROR PAGE PERHAPS
+          throw new Error("Unable to Authenticate")
         }
       } catch (error) {
-        console.log("Could not handle thrift request");
-        console.log(error);
-        // Seite anzeigen, dass etwas fehlgeschlagen ist
+        const errorMessage = `Could not handle server authentification :${error.message}`
+        err.value = new Error(errorMessage)
       }
     } else {
       if (authStore.authToken) {
+        // validate token against server
+        try {
         if (satelliteStore.selectedSatellite) {
             router.push("/image")
         } else {
@@ -77,6 +81,10 @@
             router.push("/login")
           }
         }
+      } catch(e) {
+        const errorMessage = `The authentication failed: ${e.message}`
+        err.value = new Error(errorMessage)
+      }
       } else {
         // No auth token found, back to login with you
         await router.push("/login")
