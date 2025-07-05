@@ -44,7 +44,7 @@ import { useSatelliteStore } from '@/stores/satellites';
 const router = useRouter()
 const authStore = useAuthStore()
 
-const redirectTo= 'http://localhost:5173/auth' // todo change to host
+const redirectTo= window.location.origin + "/auth" // todo change to host
 
 let token: string | null
 token = router.currentRoute.value.fullPath
