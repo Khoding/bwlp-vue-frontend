@@ -39,12 +39,11 @@ import { useAuthStore } from '@/stores/auth-store';
 import { ref } from 'vue';
 import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
 import {Thrift} from '@/assets/js/thrift/thrift.js';
-import { useSatelliteStore } from '@/stores/satellites';
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const redirectTo= window.location.origin + "/auth" // todo change to host
+const redirectTo=  window.location.origin + "/suite/auth" // todo change to host
 
 let token: string | null
 token = router.currentRoute.value.fullPath
