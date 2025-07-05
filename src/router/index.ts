@@ -17,6 +17,8 @@ import UserAgreementView from '@/views/legal-views/UserAgreementView.vue';
 import PrivacyPolicyView from '@/views/legal-views/PrivacyPolicyView.vue';
 import AuthView from '@/views/AuthView.vue';
 
+const url_prefix = import.meta.env.VITE_URL_PREFIX
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -165,7 +167,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 const router = createRouter({
-  history: createWebHistory("/suite"),
+  history: createWebHistory(url_prefix),
 
   routes,
 });
