@@ -5,17 +5,14 @@ type AuthSettings = {
     Params: Map<string, string>
 }
 
-export type UserAuthInfo = {
-    status: "ok" | "error"
-    firstname: string,
-    lastname: string,
-    email: string,
-    userId: string,
-    organizationId: string,
+export type AuthInfo = {
+    status: "ok" | "error",
     satellites2: Array<SatelliteServer>;
     token: string,
     sessionId: string
 }
+
+export type UserAuthInfo = AuthInfo & LocalUserInfo
 
 export type ClientSessionData = {
     authToken: string,
@@ -24,12 +21,13 @@ export type ClientSessionData = {
     userInfo: LocalUserInfo
 }
 
-type LocalUserInfo = {
-    email: string,
+export type LocalUserInfo = {
+    email?: string,
+    mail?: string,
     firstName: string,
     lastName: string,
     organizationId: string
-    role: number,
+    role?: number,
     userId: string
 }
 
@@ -93,9 +91,9 @@ export function getJsonFromURLParams(url: string): UserAuthInfo | null {
 
 export function getUserAuthInfoFromClientSessionData(clientSessionData: ClientSessionData): UserAuthInfo {
     return {
-        email: clientSessionData.userInfo.email,
-        firstname: clientSessionData.userInfo.firstName,
-        lastname: clientSessionData.userInfo.lastName,
+        email: clientSessionData.userInfo.email ?? clientSessionData.userInfo.mail,
+        firstName: clientSessionData.userInfo.firstName,
+        lastName: clientSessionData.userInfo.lastName,
         organizationId: clientSessionData.userInfo.organizationId,
         satellites2: getSatellitesFromLocalTestResponse(clientSessionData.satellites),
         sessionId: clientSessionData.sessionId,

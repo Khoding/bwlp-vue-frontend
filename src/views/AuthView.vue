@@ -29,11 +29,12 @@
     import { SatelliteServer } from '@/satellites/satellite';
     import SatelliteSelectionModal from '@/components/SatelliteSelectionModal.vue';
     import ErrorMessage from '@/components/error/ErrorMessage.vue';
+    import { useUserInfoStore } from '@/stores/userInfo';
  
     const router = useRouter()
     const authStore = useAuthStore()
     const satelliteStore = useSatelliteStore()
-
+    const userInfoStore = useUserInfoStore()
 
     let showModal = ref(false)
     let options = ref(null)
@@ -54,6 +55,7 @@
 
         if (ServerResponse.userId === userAuthInfo.userId) {
           authStore.setToken(userAuthInfo.token);
+          userInfoStore.setUserInfo(userAuthInfo)
           satelliteStore.setSatellites(userAuthInfo.satellites2);
           options = ref(createOptions(userAuthInfo.satellites2))
           showModal.value = true;
@@ -78,6 +80,7 @@
             // maybe redirect them back to /login?
             // TODO: find out if there is a better wa to do this:
             authStore.clearToken()
+            userInfoStore.clearUserInfo()
             router.push("/login")
           }
         }

@@ -18,13 +18,16 @@
         <i>arrow_drop_down</i>
         <menu class="border">
           <li v-if="authStore.authToken">
-            <a href="#" @click.prevent="logout"> Logout </a>
+            <a href="#" @click.prevent="logout"> Logout </a><
           </li>
           <li v-if="authStore.authToken">
             <a @click="openSatelliteSelection"> Satellitenserver auswählen </a>
           </li>
         </menu>
       </button>
+    <button v-if="authStore.authToken" data-ui="#user-info-dialog" class="button transparent">
+      <i>account_box</i>
+    </button>
     </nav>
   </header>
 
@@ -39,6 +42,20 @@
     </header>
 
     <ThemeSwitcher />
+  
+  </dialog>
+    <dialog id="user-info-dialog" class="medium right">
+    <header class="fixed">
+      <nav>
+        <h5 class="max">Informationen</h5>
+        <button class="transparent circle small" data-ui="#user-info-dialog">
+          <i>close</i>
+        </button>
+        
+      </nav>
+    </header>
+
+    <Menu />
   </dialog>
 
   <SatelliteSelectionModal
@@ -60,6 +77,7 @@ import { useSatelliteStore } from '@/stores/satellites';
 import SatelliteSelectionModal from './SatelliteSelectionModal.vue';
 import { ref } from '@vue/runtime-core';
 import { SatelliteServer } from '@/satellites/satellite';
+import Menu from './dialog/Menu.vue';
 
 const router: Router = useRouter();
 const authStore = useAuthStore();
