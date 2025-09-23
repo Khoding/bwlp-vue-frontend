@@ -58,7 +58,7 @@
           userInfoStore.setUserInfo(userAuthInfo)
           satelliteStore.setSatellites(userAuthInfo.satellites2);
           options = ref(createOptions(userAuthInfo.satellites2))
-          showModal.value = true;
+          handleSatelliteSelection(userAuthInfo)
         } else {
           throw new Error("Unable to Authenticate")
         }
@@ -68,17 +68,19 @@
       }
     } else {
       if (authStore.authToken) {
-        // validate token against server
+        const ServerResponse = await masterServerClient.getUserFromToken(userAuthInfo.token) as UserAuthInfo
+        if (ServerResponse.userId !== userAuthInfo.userId) {
+          throw new Error("Authentification failed invalid user_id")
+        }
         try {
         if (satelliteStore.selectedSatellite) {
             router.push("/image")
         } else {
           if(satelliteStore.satellites.length > 0) {
-            showModal.value = true
+            handleSatelliteSelection(userAuthInfo)
           } else {
             // user authenticated but no satellitesServer found
             // maybe redirect them back to /login?
-            // TODO: find out if there is a better wa to do this:
             authStore.clearToken()
             userInfoStore.clearUserInfo()
             router.push("/login")
@@ -112,4 +114,21 @@
   async function submitCustomIp() {
     await router.push("/image")
   }
+
+  function handleSatelliteSelection(userAuthInfo: UserAuthInfo) {
+    const filterOutTestServers = userAuthInfo.satellites2.filter((sat) => {
+      return !sat.name.includes("{x}")
+    })
+
+    console.log(filterOutTestServers)
+
+    if (filterOutTestServers.length == 1) {
+      satelliteStore.setSelectedSatellite(filterOutTestServers[0])
+      router.push("/image")
+    }
+    else{
+      showModal.value = true
+    }
+  }
+
   </script>

@@ -31,6 +31,12 @@ export type LocalUserInfo = {
     userId: string
 }
 
+export type WhoamiInfo = {
+    UserInfo: LocalUserInfo,
+    isSuperUser: boolean,
+    canListImages: boolean,
+}
+
 export function generateLoginURL(settings: AuthSettings): string {
     return settings.MasterServerURL + "?" + getUrlParamsString(settings.Params)
 }
