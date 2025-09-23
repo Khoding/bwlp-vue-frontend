@@ -56,9 +56,10 @@
         if (ServerResponse.userId === userAuthInfo.userId) {
           authStore.setToken(userAuthInfo.token);
           userInfoStore.setUserInfo(userAuthInfo)
-          satelliteStore.setSatellites(userAuthInfo.satellites2);
-          options = ref(createOptions(userAuthInfo.satellites2))
-          handleSatelliteSelection(userAuthInfo)
+          const usableSatellites = removeTestSatelliteServers(userAuthInfo.satellites2)
+          satelliteStore.setSatellites(usableSatellites);
+          options = ref(createOptions(usableSatellites))
+          handleSatelliteSelection(usableSatellites)
         } else {
           throw new Error("Unable to Authenticate")
         }
@@ -77,7 +78,7 @@
             router.push("/image")
         } else {
           if(satelliteStore.satellites.length > 0) {
-            handleSatelliteSelection(userAuthInfo)
+            handleSatelliteSelection(userAuthInfo.satellites2)
           } else {
             // user authenticated but no satellitesServer found
             // maybe redirect them back to /login?
@@ -115,10 +116,14 @@
     await router.push("/image")
   }
 
-  function handleSatelliteSelection(userAuthInfo: UserAuthInfo) {
-    const filterOutTestServers = userAuthInfo.satellites2.filter((sat) => {
+  function removeTestSatelliteServers(sats: SatelliteServer[]): SatelliteServer[] {
+    return sats.filter((sat) => {
       return !sat.name.includes("{x}")
     })
+  }
+
+  function handleSatelliteSelection(sats: SatelliteServer[]) {
+    const filterOutTestServers = removeTestSatelliteServers(sats)
 
     console.log(filterOutTestServers)
 

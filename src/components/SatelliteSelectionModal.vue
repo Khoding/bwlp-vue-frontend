@@ -13,7 +13,7 @@
             :key="key"
             @click="selectOption(key, value)"
           >
-            {{ key }}
+            {{ key }} ({{ value.addresses.length > 0 ? value.addresses[0] : '' }})
           </div>
         </div>
       </div>
