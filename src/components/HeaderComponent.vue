@@ -43,10 +43,21 @@
       </nav>
     </header>
 
-    <HeaderMenu>
+    <HeaderMenu  @open-satellite-modal="openSatelliteSelection">
 
     </HeaderMenu>
+
+      
   </dialog>
+
+  <SatelliteSelectionModal
+        :isVisible="showModal"
+        :options="options"
+        @close="closeModal"
+        @submit="submitChoice"
+        @options="options"
+        @custom-ip-submit="submitCustomIp"
+  />
 </template>
 
 <script setup lang="ts">
@@ -56,13 +67,56 @@ import {useAuthStore} from '@/stores/auth-store';
 import MobileNavigation from '@/components/navigation/MobileNavigation.vue';
 import ThemeSwitcher from '@/components/theme/ThemeSwitcher.vue';
 import HeaderMenu from './dialog/HeaderMenu.vue';
+import SatelliteSelectionModal from './SatelliteSelectionModal.vue';
+import { ref } from 'vue';
+import { SatelliteServer } from '@/satellites/satellite';
+import { useSatelliteStore } from '@/stores/satellites';
 
 const router: Router = useRouter();
 const authStore = useAuthStore();
+const satStore = useSatelliteStore()
+
+
+let showModal = ref<boolean>(false)
+let options = ref<Record<string, SatelliteServer> | null>(null)
+
 
 const logout = (): void => {
   authStore.clearToken();
   router.push('/login');
 };
+
+function submitChoice() {
+  showModal.value = false
+  router.push("/login")
+}
+
+function closeModal() {
+  showModal.value = false
+}
+
+function submitCustomIp() {
+  showModal.value = false
+  router.go(0)
+}
+
+function openSatelliteSelection() {
+  if (!options) {
+    options.value = createOptions(satStore.satellites)
+    showModal.value = true
+  }
+  showModal.value = true
+  options.value = createOptions(satStore.satellites)
+}
+
+function createOptions(satellites: SatelliteServer[]): Record<string, SatelliteServer> {
+  let sats: Record<string, SatelliteServer> = {}
+  satellites.forEach((sat) => {
+    sats[sat.name] = sat
+  })
+  return sats
+}
+
+
 
 </script>
