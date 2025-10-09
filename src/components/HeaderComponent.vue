@@ -81,11 +81,6 @@ let showModal = ref<boolean>(false)
 let options = ref<Record<string, SatelliteServer> | null>(null)
 
 
-const logout = (): void => {
-  authStore.clearToken();
-  router.push('/login');
-};
-
 function submitChoice() {
   showModal.value = false
   router.push("/login")

@@ -2,7 +2,7 @@
   <div>
   <div class="login-view">
     <h2>Login</h2>
-    <p> Loggen Sie sich hier mit Ihrem Hochschulaccount über Shibboleth ein:</p>
+    <p> Loggen Sie sich hier mit Ihrem Hochschulaccount übere Institution via Shibboleth ein:</p>
     <button @click="login()">
       Login via Shibboleth
     </button>
@@ -43,7 +43,7 @@ import {Thrift} from '@/assets/js/thrift/thrift.js';
 const router = useRouter()
 const authStore = useAuthStore()
 
-const redirectTo=  window.location.origin + "/suite/auth" // todo change to host
+const redirectTo=  window.location.origin + "/suite/auth"
 
 let token: string | null
 token = router.currentRoute.value.fullPath

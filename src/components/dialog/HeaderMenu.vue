@@ -2,9 +2,9 @@
   <div>
     User Information:
   </div>
-  <div v-if="userInfo.userInfo" class="s m l info-container" >
-    <p>{{ userInfo.userInfo.firstName }} {{ userInfo.userInfo.lastName }} ({{  userInfo.userInfo.email ?? userInfo.userInfo.mail  }})</p>
-    <p>{{ userInfo.userInfo.organizationId }}</p>
+  <div v-if="userInfoStore.userInfo" class="s m l info-container" >
+    <p>{{ userInfoStore.userInfo.firstName }} {{ userInfoStore.userInfo.lastName }} ({{  userInfoStore.userInfo.email ?? userInfoStore.userInfo.mail  }})</p>
+    <p>{{ userInfoStore.userInfo.organizationId }}</p>
     <button
    @click="logout" data-ui="#user-info-dialog">
       <i>logout</i>
@@ -29,6 +29,7 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth-store';
 import { useSatelliteStore } from '@/stores/satellites';
@@ -37,10 +38,13 @@ import { useRouter, Router } from 'vue-router';
 
 import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
 import {Thrift} from '@/assets/js/thrift/thrift.js';
+import { computed, onMounted } from 'vue';
+import { ref } from 'vue';
+import { LocalUserInfo, UserAuthInfo } from '@/auth/auth';
 
 const router: Router = useRouter()
 const authStore = useAuthStore()
-const userInfo = useUserInfoStore()
+const userInfoStore = useUserInfoStore()
 const satStore = useSatelliteStore()
 
 const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
@@ -51,7 +55,7 @@ const main = new MasterServerClient(proto)
 const logout = async () => {
   await main.invalidateSession(authStore.authToken)
   authStore.clearToken()
-  userInfo.clearUserInfo()
+  useUserInfoStore().clearUserInfo()
   satStore.clearSatellites()
   satStore.clearSelectedSatellite()
   router.push('/login')
