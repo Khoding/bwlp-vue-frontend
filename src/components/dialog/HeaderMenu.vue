@@ -2,7 +2,7 @@
   <div>
     User Information:
   </div>
-  <div class="s m l info-container" >
+  <div v-if="userInfo.userInfo" class="s m l info-container" >
     <p>{{ userInfo.userInfo.firstName }} {{ userInfo.userInfo.lastName }} ({{  userInfo.userInfo.email ?? userInfo.userInfo.mail  }})</p>
     <p>{{ userInfo.userInfo.organizationId }}</p>
     <button
@@ -35,12 +35,21 @@ import { useSatelliteStore } from '@/stores/satellites';
 import { useUserInfoStore } from '@/stores/userInfo';
 import { useRouter, Router } from 'vue-router';
 
+import {MasterServerClient} from '@/assets/js/bwlp/bwlp.js';
+import {Thrift} from '@/assets/js/thrift/thrift.js';
+
 const router: Router = useRouter()
 const authStore = useAuthStore()
 const userInfo = useUserInfoStore()
 const satStore = useSatelliteStore()
 
-const logout = (): void => {
+const mainServer = 'bwlp-masterserver.ruf.uni-freiburg.de';
+const proto = new Thrift.Protocol(new Thrift.Transport(`https://${mainServer}/thrift/`))
+const main = new MasterServerClient(proto)
+
+
+const logout = async () => {
+  await main.invalidateSession(authStore.authToken)
   authStore.clearToken()
   userInfo.clearUserInfo()
   satStore.clearSatellites()
