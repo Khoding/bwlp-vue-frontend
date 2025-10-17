@@ -114,7 +114,7 @@ function validateCustomInput(input: string): boolean {
     const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
     // Validate URL (basic check for http, https, ftp, etc.)
-    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+    const urlRegex = /^[^\s/$.?#].[^\s]*$/i;
 
     if (ipv4Regex.test(input)) {
         return true
