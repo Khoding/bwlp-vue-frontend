@@ -1,5 +1,7 @@
 <template>
   <div v-if="isVisible" class="modal-overlay">
+    <ErrorMessage default-message="Something unexpected happened error while authenticating. Please try again later"
+      :error="err"></ErrorMessage>
     <div class="modal">
       <h2>Bitte wählen Sie einen Server aus:</h2>
       <div class="custom-select">
@@ -38,7 +40,8 @@
 <script setup lang="ts">
 import { SatelliteServer } from '@/satellites/satellite';
 import { useSatelliteStore } from '@/stores/satellites';
-import { defineProps, defineEmits, ref } from 'vue';
+import { defineProps, defineEmits, ref, ErrorCodes } from 'vue';
+import ErrorMessage from './error/ErrorMessage.vue';
 
 const props = defineProps<{
   isVisible: boolean;
@@ -62,6 +65,8 @@ const selectedKey = ref<string | null>(null)
 const customIpAddress = ref<string | null>(null)
 
 const showForm = ref<boolean>(false)
+
+let err =  ref<Error | null>(null)
 
 function closeModal() {
   emit('close');
@@ -88,15 +93,36 @@ function toggleForm() {
 
 function saveCustomIpAddress() {
   if (customIpAddress.value) {
-    const sat : SatelliteServer = {
+    if (validateCustomInput(customIpAddress.value)) {
+      console.log("valid ip")
+      const sat : SatelliteServer = {
       name: "Customserver",
       addresses: [customIpAddress.value],
     }
     satelliteStore.setSelectedSatellite(sat)
     emit("custom-ip-submit")
+    } else {
+      err.value =  new Error("Die angegebene Adresse ist keine IP oder URL")
+    }
   } else {
-    //TODO: Raise some Error here
+    err.value =  new Error("Keine Adressse angegeben")
   }
+}
+
+function validateCustomInput(input: string): boolean {
+    // Validate IPv4 address
+    const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+    // Validate URL (basic check for http, https, ftp, etc.)
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+
+    if (ipv4Regex.test(input)) {
+        return true
+    } else if (urlRegex.test(input)) {
+        return true;
+    } else {
+        return false
+    }
 }
 
 
@@ -110,6 +136,7 @@ function saveCustomIpAddress() {
   right: 0;
   bottom: 0;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 9999;

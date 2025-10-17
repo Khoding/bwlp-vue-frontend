@@ -83,7 +83,7 @@ let options = ref<Record<string, SatelliteServer> | null>(null)
 
 function submitChoice() {
   showModal.value = false
-  router.push("/login")
+  router.go(0)
 }
 
 function closeModal() {
