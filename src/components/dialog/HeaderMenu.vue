@@ -59,6 +59,7 @@ const logout = async () => {
   satStore.clearSatellites()
   satStore.clearSelectedSatellite()
   router.push('/login')
+  router.go(0)
 };
 
 const emit = defineEmits(['openSatelliteModal', 'closeMenu']);
