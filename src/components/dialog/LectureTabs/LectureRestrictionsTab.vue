@@ -30,7 +30,7 @@
       :name="`is_exam-${lecture.lectureId}`"
       disabled
     />
-    <span class="wrap">Externe Speichermedien zulassen</span>
+    <span class="wrap">Als E-Prüfung markieren</span>
   </label>
 </template>
 

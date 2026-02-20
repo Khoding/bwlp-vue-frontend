@@ -15,6 +15,9 @@ import LectureDuplicateView from '@/views/duplicate/LectureDuplicateView.vue';
 
 import UserAgreementView from '@/views/legal-views/UserAgreementView.vue';
 import PrivacyPolicyView from '@/views/legal-views/PrivacyPolicyView.vue';
+import AuthView from '@/views/AuthView.vue';
+
+const url_prefix = import.meta.env.VITE_URL_PREFIX
 
 const routes: RouteRecordRaw[] = [
   {
@@ -44,6 +47,12 @@ const routes: RouteRecordRaw[] = [
         next();
       }
     },
+  },
+  {
+   path: "/auth",
+   name: "Authentification",
+   component: AuthView,
+   meta: {title: 'Authentifizierung'}
   },
   {
     path: '/image',
@@ -158,7 +167,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(url_prefix),
 
   routes,
 });

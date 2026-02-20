@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import {computed, onMounted} from 'vue';
 import {useAuthStore} from '@/stores/auth-store';
+import { useSatelliteStore } from '@/stores/satellites';
 import {useThemeStore} from '@/stores/theme';
 import {useMinigameActivated} from '@/stores/minigame';
 
@@ -27,6 +28,7 @@ import Minigame from '@/components/Minigame.vue';
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
 const minigameStore = useMinigameActivated();
+const satStore = useSatelliteStore();
 
 const activateMinigame = computed(() => minigameStore.isMinigameActivated);
 

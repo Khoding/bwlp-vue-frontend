@@ -67,6 +67,6 @@ app.use(router);
 app.use(i18n);
 
 // app.config.globalProperties.$sat1Server = 'bwlp-pxe.ruf.uni-freiburg.de';
-app.config.globalProperties.$sat1Server = '10.4.9.57'; // when it breaks go to http://10.4.9.57/thrift
+// app.config.globalProperties.$sat1Server = '10.4.9.57'; // when it breaks go to http://10.4.9.57/thrift
 
 app.mount('#app');

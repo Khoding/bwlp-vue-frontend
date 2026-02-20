@@ -1,0 +1,110 @@
+import { getSatellitesFromLocalTestResponse, LocalLoginSatellites, SatelliteServer } from "@/satellites/satellite";
+
+type AuthSettings = {
+    MasterServerURL: string,
+    Params: Map<string, string>
+}
+
+export type AuthInfo = {
+    status: "ok" | "error",
+    satellites2: Array<SatelliteServer>;
+    token: string,
+    sessionId: string
+}
+
+export type UserAuthInfo = AuthInfo & LocalUserInfo
+
+export type ClientSessionData = {
+    authToken: string,
+    satellites: Array<LocalLoginSatellites>,
+    sessionId: string,
+    userInfo: LocalUserInfo
+}
+
+export type LocalUserInfo = {
+    email?: string,
+    mail?: string,
+    firstName: string,
+    lastName: string,
+    organizationId: string
+    role?: number,
+    userId: string
+}
+
+export type WhoamiInfo = {
+    UserInfo: LocalUserInfo,
+    isSuperUser: boolean,
+    canListImages: boolean,
+}
+
+export function generateLoginURL(settings: AuthSettings): string {
+    return settings.MasterServerURL + "?" + getUrlParamsString(settings.Params)
+}
+
+export function getTokenFromUrl(url: string): string | null { 
+    let keyVals = new Map<string, string>()
+    const urlSplit = url.split("#")
+    if (urlSplit.length == 2) {
+        const params = urlSplit[1].split("&")
+        params.forEach((keyValString) => {
+            const splitted = keyValString.split("=")
+            keyVals.set(splitted[0], splitted[1])
+        })
+        return keyVals.get("token")
+    }
+    else return null
+}
+
+function getUrlParamsString(params: Map<string, string>): string {
+    let paramsString = ""
+    params.forEach((value, key) => {
+        const keyEncoded = encodeURI(key)
+        const valEncoded = encodeURI(value)
+        paramsString += keyEncoded + "=" + valEncoded + "&"
+    })
+    return paramsString.slice(0, -1)
+}
+
+export function getJsonFromURLParams(url: string): UserAuthInfo | null {
+    const urlRegexPattern = RegExp("[#|?]")
+    if (!url.match(urlRegexPattern)) {
+        return null
+    }
+    let paramMap = new Map<string, string>()
+    const urlParams = url.split(urlRegexPattern)[1].split("&")
+    urlParams.forEach((keyValString) => {
+        const keyValSplit = keyValString.split("=")
+        const key = decodeURI(keyValSplit[0])
+        const val = decodeURI(keyValSplit[1])
+        paramMap.set(key, val)
+    })
+
+    if (!paramMap.has("data"))  {
+        return null
+    }
+    let userAuthInfo = JSON.parse(paramMap.get("data")) as UserAuthInfo
+    const satsObj = JSON.parse(paramMap.get("data"))
+    const keys = Object.keys(satsObj["satellites2"])
+    let satServers = Array<SatelliteServer>()
+    keys.forEach((sat) => {
+        let satServer = satsObj["satellites2"][sat] as SatelliteServer
+        satServer.name = satsObj["satellites2"][sat]["name"] ?? sat
+        satServers.push(satServer)
+    })
+    userAuthInfo.satellites2 = satServers
+    return userAuthInfo
+}
+
+export function getUserAuthInfoFromClientSessionData(clientSessionData: ClientSessionData): UserAuthInfo {
+    return {
+        email: clientSessionData.userInfo.email ?? clientSessionData.userInfo.mail,
+        firstName: clientSessionData.userInfo.firstName,
+        lastName: clientSessionData.userInfo.lastName,
+        organizationId: clientSessionData.userInfo.organizationId,
+        satellites2: getSatellitesFromLocalTestResponse(clientSessionData.satellites),
+        sessionId: clientSessionData.sessionId,
+        status: "ok",
+        token: clientSessionData.authToken,
+        userId: clientSessionData.userInfo.userId
+    }
+}
